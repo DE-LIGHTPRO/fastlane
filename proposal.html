@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>Pilot proposal | FastLane</title>
+<meta name="description" content="A one-branch pilot proposal for FastLane: scan while you wait.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/bricolage-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="appbar">
+  <a class="logo" href="index.html" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+  <span class="chip">Proposal</span>
+  <span class="spacer"></span>
+  <span class="chip neutral">Demo</span>
+  <details class="menu">
+    <summary aria-label="Switch view"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#grid"/></svg></summary>
+    <nav aria-label="Views">
+      <div class="group">Shopper</div>
+      <a href="scan.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Scan in store</a>
+      <a href="order.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
+      <div class="group">Staff</div>
+      <a href="checker.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="assist.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#users"/></svg>Scan for a shopper</a>
+      <a href="pickup.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
+      <div class="group">Setup</div>
+      <a href="products.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
+      <a href="poster.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="proposal.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#receipt"/></svg>Pilot proposal</a>
+      <a href="index.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
+    </nav>
+  </details>
+</header>
+
+<main class="app wide">
+  <div class="no-print row-end">
+    <button class="btn primary" id="print" type="button"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Print or save as PDF</button>
+  </div>
+  <article class="doc">
+    <header class="doc-head">
+      <div class="logo"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</div>
+      <span>Pilot proposal</span>
+    </header>
+    <h1>A shorter checkout queue on weekend nights</h1>
+    <p class="doc-lead">A proposal for a one-branch pilot of FastLane at bokku! Mart.</p>
+
+    <div class="doc-grid">
+      <section><h2>The problem</h2><p>On weekend evenings the checkout queue at a busy branch can take 30 minutes or more. We have stood in it. The cause is simple: every item in every basket is scanned at the till, one at a time, while a long line of shoppers waits with nothing to do.</p></section>
+      <section><h2>The idea</h2><p>Let shoppers scan their own basket on their phone while they wait. At a fast lane, a checker scans one code, confirms the basket with a guided spot check, and takes payment the usual way: cash, POS or transfer. Shoppers without a phone can have their basket scanned in the queue by a member of staff.</p></section>
+      <section><h2>Why this is different</h2><ul><li>It starts in the queue, when shoppers have a reason to try it and can see the fast lane moving.</li><li>Nothing to install: it opens in the phone browser from a printed sign.</li><li>Payment does not change, so nobody has to trust a new payment app.</li><li>It is optional. The normal tills stay open.</li></ul></section>
+      <section><h2>The pilot</h2><ul><li><b>Where:</b> one branch with a known weekend queue.</li><li><b>When:</b> Friday to Sunday evenings, for four weekends.</li><li><b>How:</b> one or two existing tills become fast lanes, with a sign where the queue forms.</li></ul></section>
+      <section><h2>What we need from the store</h2><ul><li>An export of the product list: barcodes, names and prices.</li><li>One checker per fast lane, using a phone with a camera.</li><li>Mobile signal or shopper Wi-Fi in the queue area.</li><li>A short briefing with the branch team before the first night.</li></ul></section>
+      <section><h2>What we provide</h2><ul><li>The software, set up with the store product list.</li><li>The printed queue signs.</li><li>Training for the checkers, and support on site on pilot nights.</li><li>A report after each weekend.</li></ul></section>
+      <section><h2>How losses are controlled</h2><ul><li>Prices come from the store list, never from the shopper phone.</li><li>The checker must find named items, always including the most expensive one, and count the basket.</li><li>Baskets over 25 items are fully counted.</li><li>Each pass works once and expires after 15 minutes.</li><li>A sample of fast-lane baskets is fully re-scanned each night to measure losses.</li></ul></section>
+      <section><h2>What we will measure</h2><ul><li>Time in the queue, before and during the pilot.</li><li>The share of shoppers who choose the fast lane.</li><li>Shoppers served per till, per hour.</li><li>The mismatch rate found by the nightly audits.</li><li>What checkers and shoppers say about it.</li></ul></section>
+      <section><h2>Before the first night</h2><p>The demo at the address below runs without a server. Before a live pilot we will add a shared server, so every fast lane sees the same record of used passes, load the store product list, and agree how sales are reported back to the till system.</p></section>
+      <section><h2>Cost</h2><p>There is no charge for the pilot. If the results are good, pricing for a wider rollout is agreed afterwards.</p></section>
+    </div>
+
+    <footer class="doc-foot">
+      <div><b>See the demo</b><span id="doc-url"></span></div>
+      <div id="doc-contact" hidden><b>Contact</b><span id="doc-contact-text"></span></div>
+      <p>Independent concept prepared for bokku! Mart. Not an official bokku! service.</p>
+    </footer>
+  </article>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/proposal.js"></script>
+</body>
+</html>

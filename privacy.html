@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>Privacy | FastLane</title>
+<meta name="description" content="What FastLane does with your camera and your data.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/bricolage-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="appbar">
+  <a class="logo" href="index.html" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+  <span class="chip">Privacy</span>
+  <span class="spacer"></span>
+  <span class="chip neutral">Demo</span>
+  <details class="menu">
+    <summary aria-label="Switch view"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#grid"/></svg></summary>
+    <nav aria-label="Views">
+      <div class="group">Shopper</div>
+      <a href="scan.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Scan in store</a>
+      <a href="order.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
+      <div class="group">Staff</div>
+      <a href="checker.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="assist.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#users"/></svg>Scan for a shopper</a>
+      <a href="pickup.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
+      <div class="group">Setup</div>
+      <a href="products.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
+      <a href="poster.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="proposal.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#receipt"/></svg>Pilot proposal</a>
+      <a href="index.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
+    </nav>
+  </details>
+</header>
+
+<main class="app">
+  <div class="page-head">
+    <h1>Privacy</h1>
+    <p>What this demo does with your camera and your data.</p>
+  </div>
+  <div class="card flush">
+    <ul class="plain-list">
+      <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#camera"/></svg><div><b>The camera only reads codes</b><span>Pictures from your camera are read on your phone to find a barcode or a pass. No photo or video is saved or sent anywhere.</span></div></li>
+      <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#phone"/></svg><div><b>Your basket stays on your phone</b><span>Baskets, orders and sales records are kept in this browser on this device. This demo has no server, so nothing is uploaded.</span></div></li>
+      <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#shield"/></svg><div><b>No account, no tracking</b><span>FastLane does not ask for your name, phone number or email. It sets no advertising or analytics cookies.</span></div></li>
+      <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#qr"/></svg><div><b>What a pass contains</b><span>A pass holds a basket number, the time it was made and the barcodes and quantities in the basket. It holds nothing about you.</span></div></li>
+      <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#x"/></svg><div><b>Clearing your data</b><span>Tap "Start again" on the shopper page, or clear this site's data in your browser settings.</span></div></li>
+    </ul>
+  </div>
+  <p class="small muted">A live service that takes payment or stores orders on a server would need a fuller notice. This page describes the demo as it is today.</p>
+  <a class="btn block" href="index.html">Back to the start</a>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/ui.js"></script>
+</body>
+</html>

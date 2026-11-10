@@ -1,36 +1,23 @@
-import { decodeBasket, codeAge, priceBasket, pickSpotChecks, checkMode, formatNaira, salesToCsv } from './basket.js';
+import qrcode from '../vendor/qrcode.js';
+import { decodeBasket, codeAge, priceBasket, pickSpotChecks, checkMode, formatNaira, salesToCsv, encodeReceipt, methodLabel, MAX_QTY } from './basket.js';
+import { loadSales, recordSale, clearSales, summarise } from './sales.js';
 import { loadCatalogue } from './catalogue.js';
 import { beep, QR_FORMATS } from './scanner.js';
 import { cameraPanel } from './camera-panel.js';
-import { $, escapeHtml, icon, show, toast, confirmDialog, plural } from './ui.js';
+import { $, escapeHtml, icon, show, toast, confirmDialog, plural, qrSvg } from './ui.js';
 
-const KEY = 'fastlane.sales';
 let catalogue = new Map();
-let current = null; // { id, ts, lines, unknown, total, units, method }
+let current = null; // { id, ts, items, extras, checks, ticked, lines, unknown, total, units, method }
 let lastScan = { text: '', at: 0 };
 
-function loadSales() {
-  try {
-    const list = JSON.parse(localStorage.getItem(KEY) || '[]');
-    return Array.isArray(list) ? list : [];
-  } catch { return []; }
-}
-function recordSale(status) {
-  const sales = loadSales();
-  sales.push({ id: current.id, at: Date.now(), status, method: status === 'paid' ? current.method : '', total: current.total, units: current.units, lines: current.lines });
-  localStorage.setItem(KEY, JSON.stringify(sales));
-}
-
 function renderSummary() {
-  const sales = loadSales();
-  const paid = sales.filter((s) => s.status === 'paid');
-  const by = (m) => formatNaira(paid.filter((s) => s.method === m).reduce((t, s) => t + s.total, 0));
-  $('#sum-count').textContent = String(paid.length);
-  $('#sum-total').textContent = formatNaira(paid.reduce((t, s) => t + s.total, 0));
-  $('#sum-cash').textContent = by('cash');
-  $('#sum-pos').textContent = by('pos');
-  $('#sum-transfer').textContent = by('transfer');
-  $('#sum-rejected').textContent = String(sales.filter((s) => s.status === 'rejected').length);
+  const sum = summarise(loadSales());
+  $('#sum-count').textContent = String(sum.count);
+  $('#sum-total').textContent = formatNaira(sum.total);
+  $('#sum-cash').textContent = formatNaira(sum.cash);
+  $('#sum-pos').textContent = formatNaira(sum.pos);
+  $('#sum-transfer').textContent = formatNaira(sum.transfer);
+  $('#sum-rejected').textContent = String(sum.rejected);
 }
 
 function setNote(el, message) {
@@ -64,17 +51,29 @@ function openBasket(text) {
   if (age === 'expired') return scanError('This pass is more than 15 minutes old. Ask the shopper to tap "Get a new pass".');
   if (age === 'future') return scanError('The time on this pass is wrong. Ask the shopper to check the clock on their phone.');
 
-  const priced = priceBasket(basket.items, catalogue);
-  current = { id: basket.id, ts: basket.ts, ...priced, method: '' };
+  current = { id: basket.id, ts: basket.ts, items: basket.items, extras: [], checks: null, ticked: new Set(), method: '' };
+  price();
   camera.close();
   beep(true);
   renderReview();
   show('review');
 }
 
+// Prices the shopper's items plus anything the checker added by hand.
+function price() {
+  const scanned = priceBasket(current.items, catalogue);
+  const added = priceBasket(current.extras, catalogue);
+  current.lines = [...scanned.lines, ...added.lines.map((l) => ({ ...l, added: true }))];
+  current.unknown = scanned.unknown;
+  current.total = scanned.total + added.total;
+  current.units = scanned.units + added.units;
+  // The spot checks are chosen once, from what the shopper scanned, and do not change as items are added.
+  current.checks ||= new Set(checkMode(scanned.units) === 'spot' ? pickSpotChecks(scanned.lines) : []);
+  current.mode = checkMode(scanned.units);
+}
+
 function renderReview() {
-  const mode = checkMode(current.units);
-  const checks = new Set(mode === 'spot' ? pickSpotChecks(current.lines) : []);
+  const { mode, checks } = current;
   $('#r-id').textContent = current.id;
   $('#r-units').textContent = String(current.units);
   $('#r-total').textContent = formatNaira(current.total);
@@ -87,24 +86,40 @@ function renderReview() {
     ? `Large basket. Count every item: there must be exactly ${current.units}. Then tick the box.`
     : `Find each item marked Check in the basket and tick it. Then count the whole basket: it must hold exactly ${plural(current.units)}.`);
 
-  const rows = current.lines.map((l, i) => {
-    const check = checks.has(l.barcode);
-    const name = `${escapeHtml(l.name)}${check ? ' <span class="chip warn">Check</span>' : ''}`;
-    return `<li>
-      ${check ? `<input type="checkbox" class="need" id="chk-${i}">` : '<span class="gap"></span>'}
+  const rows = current.lines.map((l) => {
+    const check = !l.added && checks.has(l.barcode);
+    const id = `chk-${l.barcode}`;
+    const chip = l.added ? ' <span class="chip">Added here</span>' : check ? ' <span class="chip warn">Check</span>' : '';
+    const name = escapeHtml(l.name) + chip;
+    return `<li data-barcode="${l.barcode}">
+      ${check ? `<input type="checkbox" class="need" id="${id}"${current.ticked.has(id) ? ' checked' : ''}>` : '<span class="gap"></span>'}
       <div class="line-main">
-        <div class="line-name">${check ? `<label for="chk-${i}">${name}</label>` : name}</div>
+        <div class="line-name">${check ? `<label for="${id}">${name}</label>` : name}</div>
         <div class="line-sub num">${l.qty} &times; ${formatNaira(l.price)}</div>
       </div>
+      ${l.added ? `<button class="btn sm" type="button" data-act="remove-extra" aria-label="Remove one ${escapeHtml(l.name)}">Remove</button>` : ''}
       <div class="line-total">${formatNaira(l.lineTotal)}</div>
     </li>`;
   });
+  // Adding or removing an item changes the count, so the count box always starts unticked.
   rows.push(`<li>
       <input type="checkbox" class="need" id="chk-count">
       <div class="line-main"><div class="line-name"><label for="chk-count">I counted ${plural(current.units)} in the basket</label></div></div>
     </li>`);
   $('#r-lines').innerHTML = rows.join('');
+
+  $('#extras').innerHTML = [...catalogue.values()].filter((p) => p.loose).map((p) =>
+    `<button type="button" data-barcode="${p.barcode}"><span>${icon('plus')} ${escapeHtml(p.name)}</span><b class="num">${formatNaira(p.price)}</b></button>`).join('');
   updateAccept();
+}
+
+function changeExtra(barcode, delta) {
+  const found = current.extras.find((e) => e.barcode === barcode);
+  const qty = Math.min(MAX_QTY, (found?.qty || 0) + delta);
+  current.extras = current.extras.filter((e) => e.barcode !== barcode);
+  if (qty > 0) current.extras.push({ barcode, qty });
+  price();
+  renderReview();
 }
 
 function updateAccept() {
@@ -113,14 +128,23 @@ function updateAccept() {
 }
 
 function finish(status) {
-  recordSale(status);
+  const at = Date.now();
   const paid = status === 'paid';
+  recordSale({ id: current.id, at, lane: 'self-scan', status, method: paid ? current.method : '', total: current.total, units: current.units, lines: current.lines });
   $('#d-tick').classList.toggle('bad', !paid);
   $('#d-tick').innerHTML = icon(paid ? 'check' : 'x');
   $('#d-title').textContent = paid ? 'Paid' : 'Send to a normal till';
   $('#d-text').textContent = paid
-    ? `Basket ${current.id}: ${formatNaira(current.total)} by ${current.method === 'pos' ? 'POS' : current.method}. The shopper can leave.`
+    ? `Basket ${current.id}: ${formatNaira(current.total)} by ${methodLabel(current.method)}.`
     : `Basket ${current.id} did not match. A cashier must scan it again. This pass can no longer be used.`;
+  $('#receipt-card').hidden = !paid;
+  if (paid) {
+    const qr = qrcode(0, 'M');
+    qr.addData(encodeReceipt({ id: current.id, at, total: current.total, units: current.units, method: current.method }), 'Alphanumeric');
+    qr.make();
+    $('#rc-qr').innerHTML = qrSvg(qr, 'Receipt code for the shopper');
+    $('#rc-time').textContent = time(at);
+  }
   current = null;
   renderSummary();
   show('done');
@@ -138,7 +162,23 @@ const camera = cameraPanel($('#cam'), {
 });
 
 $('#paste-go').addEventListener('click', () => openBasket($('#paste').value));
-$('#r-lines').addEventListener('change', updateAccept);
+$('#r-lines').addEventListener('change', (e) => {
+  if (e.target.id && e.target.id !== 'chk-count') {
+    if (e.target.checked) current.ticked.add(e.target.id);
+    else current.ticked.delete(e.target.id);
+  }
+  updateAccept();
+});
+$('#r-lines').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-act="remove-extra"]');
+  if (btn) changeExtra(btn.closest('li').dataset.barcode, -1);
+});
+$('#extras').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-barcode]');
+  if (!btn) return;
+  changeExtra(btn.dataset.barcode, 1);
+  toast(`Added ${catalogue.get(btn.dataset.barcode).name}`);
+});
 $('#accept').addEventListener('click', () => {
   $('#p-id').textContent = current.id;
   $('#p-total').textContent = formatNaira(current.total);
@@ -179,7 +219,7 @@ $('#export').addEventListener('click', () => {
 $('#clear').addEventListener('click', async () => {
   const ok = await confirmDialog({ title: 'End this shift?', body: 'Every basket recorded on this device is cleared. Download the sales file first.', confirm: 'End shift', danger: true });
   if (!ok) return;
-  localStorage.removeItem(KEY);
+  clearSales();
   renderSummary();
   toast('Shift cleared');
 });

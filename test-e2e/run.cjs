@@ -11,11 +11,12 @@ const assert = require('node:assert/strict');
 
 const PORT = 4199;
 const BASE = `http://localhost:${PORT}`;
-const PAGES = ['index.html', 'scan.html', 'order.html', 'checker.html', 'pickup.html', 'products.html', 'poster.html'];
+const PAGES = ['index.html', 'scan.html', 'order.html', 'checker.html', 'assist.html', 'pickup.html', 'products.html', 'poster.html', 'proposal.html', 'privacy.html'];
 const products = JSON.parse(readFileSync(join(__dirname, '..', 'data', 'products.json'), 'utf8'));
 const byName = (part) => products.find((p) => p.name.includes(part));
 const noodles = products[0];
 const rice = byName('rice');
+const loaf = products.find((p) => p.loose);
 const naira = (kobo) => '₦' + String(kobo / 100).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 const phone = { width: 375, height: 760 };
 
@@ -131,7 +132,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     await sheet.waitForSelector(`#sheet [data-barcode="${noodles.barcode}"] svg`);
 
     await step('the sheet shows a barcode for every sample product', async () => {
-      assert.equal(await sheet.locator('#sheet .card').count(), products.length);
+      assert.equal(await sheet.locator('#sheet .card').count(), products.filter((p) => !p.loose).length);
     });
 
     const barcodePng = await sheet.locator(`#sheet [data-barcode="${noodles.barcode}"] svg`).screenshot();
@@ -297,6 +298,12 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await check.getByRole('heading', { name: 'Paid' }).waitFor();
     });
 
+    await step('the paid screen shows a receipt code for the shopper', async () => {
+      const png = await check.locator('#rc-qr svg').screenshot();
+      const [text] = await scanPng(check, png, 'QR_FORMATS');
+      assert.match(text, new RegExp(`^FR1/${passId}/\\d{13}/${expectedTotal}/3/POS$`));
+    });
+
     await step('the same pass is refused a second time', async () => {
       await check.getByRole('button', { name: 'Next shopper' }).click(); // camera still sees the same pass
       await check.locator('#scan-error:not([hidden])').waitFor({ timeout: 20000 });
@@ -353,11 +360,27 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       assert.equal(await check.locator('#r-lines input.need').count(), 1);
     });
 
+    await step('the checker can add and remove an item that has no barcode', async () => {
+      await toScan();
+      await paste(`FL1/HHHHHH/${now}/${rice.barcode}*1`);
+      await check.getByRole('heading', { name: 'Check the basket' }).waitFor();
+      await check.getByLabel(/Long grain rice/).check();
+      await check.locator(`#extras button[data-barcode="${loaf.barcode}"]`).click();
+      assert.equal(await check.locator('#r-total').textContent(), naira(rice.price + loaf.price));
+      assert.equal(await check.locator('#r-units').textContent(), '2');
+      assert.ok(await check.getByLabel(/Long grain rice/).isChecked(), 'ticks survive adding an item');
+      assert.ok(await check.getByLabel('I counted 2 items in the basket').isVisible());
+      assert.ok(await check.getByRole('button', { name: 'Basket is correct' }).isDisabled());
+      await check.getByRole('button', { name: /Remove one Fresh bakery loaf/ }).click();
+      assert.equal(await check.locator('#r-total').textContent(), naira(rice.price));
+      assert.ok(await check.getByLabel('I counted 1 item in the basket').isVisible());
+    });
+
     await step('the sales file downloads with one row per item line', async () => {
       await toScan();
       const [download] = await Promise.all([check.waitForEvent('download'), check.getByRole('button', { name: 'Sales file' }).click()]);
       const csv = readFileSync(await download.path(), 'utf8').trim().split('\n');
-      assert.equal(csv[0], 'basket_id,time,status,payment,barcode,item,qty,unit_price_naira,line_total_naira');
+      assert.equal(csv[0], 'basket_id,time,lane,status,payment,barcode,item,qty,unit_price_naira,line_total_naira');
       assert.equal(csv.filter((r) => r.startsWith(passId + ',')).length, 2);
       assert.ok(csv.some((r) => r.includes(',paid,pos,')));
       assert.ok(csv.some((r) => r.includes(',rejected,,')));
@@ -520,7 +543,127 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       assert.match(await check.locator('#scan-error').textContent(), /order-ahead code/);
     });
 
-    // ---- 8. Offline, accessibility
+    // ---- 8. Receipt on the shopper's phone, scanned from the checker's screen
+    const paidAt = Date.now();
+    const receiptText = `FR1/ABCDEF/${paidAt}/${rice.price * 2 + loaf.price}/3/CASH`;
+    const maker = await plain.newPage();
+    await maker.goto(BASE + '/poster.html');
+    await maker.evaluate(async (text) => {
+      const { default: qrcode } = await import('/vendor/qrcode.js');
+      const { qrSvg } = await import('/js/ui.js');
+      const qr = qrcode(0, 'M');
+      qr.addData(text, 'Alphanumeric');
+      qr.make();
+      document.querySelector('#poster-qr').innerHTML = qrSvg(qr, 'receipt');
+    }, receiptText);
+    const receiptClip = join(dir, 'receipt.y4m');
+    await pngToY4m(maker, await maker.locator('#poster-qr svg').screenshot(), receiptClip);
+    await maker.close();
+    const claimBrowser = await chromium.launch(camera(receiptClip));
+    browsers.push(claimBrowser);
+    const seedBasket = (id) => ({ id, ts: paidAt, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true, paid: null });
+    const seedOnce = (data) => { if (!localStorage.getItem('fastlane.basket')) localStorage.setItem('fastlane.basket', JSON.stringify(data)); };
+
+    await step('a receipt for a different basket is refused', async () => {
+      const ctx = await claimBrowser.newContext({ viewport: phone, permissions: ['camera'] });
+      await ctx.addInitScript(seedOnce, seedBasket('ZZZZZZ'));
+      const page = await ctx.newPage();
+      watch(page, errors);
+      await page.goto(BASE + '/scan.html');
+      await page.getByRole('button', { name: /I have paid/ }).click();
+      await page.locator('#claim-error:not([hidden])').waitFor({ timeout: 20000 });
+      assert.match(await page.locator('#claim-error').textContent(), /for basket ABCDEF\. Yours is ZZZZZZ/);
+      await ctx.close();
+    });
+
+    await step('the shopper scans the receipt and gets a paid screen that survives a reload', async () => {
+      const ctx = await claimBrowser.newContext({ viewport: phone, permissions: ['camera'] });
+      await ctx.addInitScript(seedOnce, seedBasket('ABCDEF'));
+      const page = await ctx.newPage();
+      watch(page, errors);
+      await page.goto(BASE + '/scan.html');
+      assert.equal(await page.locator('#code-id').textContent(), 'ABCDEF');
+      await page.getByRole('button', { name: /I have paid/ }).click();
+      await page.getByRole('heading', { name: 'Paid' }).waitFor({ timeout: 20000 });
+      assert.equal(await page.locator('#rx-total').textContent(), naira(rice.price * 2 + loaf.price));
+      assert.equal(await page.locator('#rx-method').textContent(), 'Cash');
+      assert.equal(await page.locator('#rx-units').textContent(), '3');
+      assert.match(await page.locator('#rx-lines').textContent(), /Added at the fast lane/);
+      assert.ok(await noSideScroll(page));
+      await page.reload();
+      await page.getByRole('heading', { name: 'Paid' }).waitFor();
+      await page.getByRole('button', { name: 'Start a new basket' }).click();
+      await page.getByText('Your basket is empty').waitFor();
+      await ctx.close();
+    });
+
+    // ---- 9. Staff scan for a shopper without a phone
+    await step('staff can scan a basket, add a no-barcode item and take payment', async () => {
+      const ctx = await plain.newContext({ viewport: phone });
+      const page = await ctx.newPage();
+      watch(page, errors);
+      await page.goto(BASE + '/assist.html');
+      assert.ok(await page.getByRole('button', { name: 'Take payment' }).isDisabled());
+      await page.locator('#search').fill('rice');
+      await page.locator('#results button').first().click();
+      await page.locator(`#extras button[data-barcode="${loaf.barcode}"]`).click();
+      await page.locator(`#lines li[data-barcode="${loaf.barcode}"]`).getByRole('button', { name: /One more/ }).click();
+      const total = rice.price + loaf.price * 2;
+      assert.equal(await page.locator('#total').textContent(), naira(total));
+      await page.getByRole('button', { name: 'Take payment' }).click();
+      assert.equal(await page.locator('#p-total').textContent(), naira(total));
+      assert.ok(await page.getByRole('button', { name: 'Payment received' }).isDisabled());
+      await page.getByRole('button', { name: 'Cash', exact: true }).click();
+      await page.getByRole('button', { name: 'Payment received' }).click();
+      await page.getByRole('heading', { name: 'Paid' }).waitFor();
+      assert.equal(await page.locator('#d-total').textContent(), naira(total));
+      await page.getByRole('button', { name: 'Next shopper' }).click();
+      await page.getByText('Nothing scanned yet').waitFor();
+      // The same device's shift summary on the checker page includes it.
+      await page.goto(BASE + '/checker.html');
+      assert.equal(await page.locator('#sum-count').textContent(), '1');
+      assert.equal(await page.locator('#sum-cash').textContent(), naira(total));
+      const lanes = await page.evaluate(() => JSON.parse(localStorage.getItem('fastlane.sales')).map((s) => s.lane));
+      assert.deepEqual(lanes, ['staff-scan']);
+      await ctx.close();
+    });
+
+    // ---- 10. Proposal and contact details
+    await step('contact details stay hidden until they are filled in, then appear on both pages', async () => {
+      const emptyCtx = await plain.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+      await emptyCtx.route('**/js/config.js', (route) => route.fulfill({
+        contentType: 'text/javascript',
+        body: "export const CONTACT = { name: 'Someone', role: '', email: '', phone: '' };",
+      }));
+      const page = await emptyCtx.newPage();
+      watch(page, errors);
+      await page.goto(BASE + '/');
+      await page.waitForLoadState('networkidle');
+      assert.ok(await page.locator('#contact').isHidden());
+      await page.goto(BASE + '/proposal.html');
+      await page.getByRole('heading', { level: 1 }).waitFor();
+      assert.ok(await page.locator('#doc-contact').isHidden());
+      assert.equal(await page.locator('#doc-url').textContent(), `localhost:${PORT}/`);
+      await emptyCtx.close();
+
+      const ctx = await plain.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+      await ctx.route('**/js/config.js', (route) => route.fulfill({
+        contentType: 'text/javascript',
+        body: "export const CONTACT = { name: 'Test Person', role: 'Founder', email: 'hello@example.com', phone: '+234 800 000 0000' };",
+      }));
+      const filled = await ctx.newPage();
+      watch(filled, errors);
+      await filled.goto(BASE + '/');
+      await filled.locator('#contact:not([hidden])').waitFor();
+      assert.equal(await filled.locator('#contact-who').textContent(), 'Test Person, Founder');
+      assert.equal(await filled.locator('#contact a[href^="mailto:"]').getAttribute('href'), 'mailto:hello%40example.com');
+      assert.equal(await filled.locator('#contact a[href^="tel:"]').getAttribute('href'), 'tel:+2348000000000');
+      await filled.goto(BASE + '/proposal.html');
+      assert.match(await filled.locator('#doc-contact-text').textContent(), /Test Person · Founder · hello@example\.com/);
+      await ctx.close();
+    });
+
+    // ---- 11. Offline, accessibility
     await step('pages keep working with no network after the first visit', async () => {
       const ctx = await plain.newContext({ viewport: phone });
       const page = await ctx.newPage();
@@ -545,6 +688,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       const seeded = {
         'scan.html#shop': { 'fastlane.basket': { id: '', ts: 0, items: [{ barcode: rice.barcode, qty: 2 }], locked: false, started: true } },
         'scan.html#pass': { 'fastlane.basket': { id: 'ABCDEF', ts: fresh, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true } },
+        'scan.html#receipt': { 'fastlane.basket': { id: 'ABCDEF', ts: fresh, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true, paid: { at: fresh, total: rice.price * 2, units: 2, method: 'cash' } } },
         'pickup.html#orders': { 'fastlane.orders': [{ id: 'KM4T7Q', ts: fresh, slot: fresh, items: [{ barcode: bread.barcode, qty: 2 }], total: bread.price * 2, units: 2, status: 'paid' }] },
       };
       for (const colorScheme of ['light', 'dark']) {

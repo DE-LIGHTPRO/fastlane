@@ -14,6 +14,9 @@ const out = (name) => join(__dirname, '..', 'docs', 'screens', name);
   await land.waitForLoadState('networkidle');
   await land.screenshot({ path: out('landing-desktop.png') });
   await land.screenshot({ path: out('landing-desktop-full.png'), fullPage: true });
+  await land.goto(BASE + '/proposal.html');
+  await land.waitForLoadState('networkidle');
+  await land.screenshot({ path: out('proposal-desktop.png'), fullPage: true });
   await land.goto(BASE + '/products.html');
   await land.waitForSelector('#sheet svg');
   await land.screenshot({ path: out('products-desktop.png') });
@@ -68,7 +71,15 @@ const out = (name) => join(__dirname, '..', 'docs', 'screens', name);
 
     await p.goto(BASE + '/pickup.html');
     await p.screenshot({ path: out(`pickup${tag}.png`), fullPage: true });
+    await p.goto(BASE + '/assist.html');
+    await p.locator('#search').fill('rice');
+    await p.locator('#results button').first().click();
+    await p.locator('#extras button').first().click();
+    await p.waitForTimeout(3200);
+    await p.screenshot({ path: out(`staff-scan${tag}.png`), fullPage: true });
     if (!tag) {
+      await p.goto(BASE + '/proposal.html');
+      await p.screenshot({ path: out('proposal-phone.png'), fullPage: true });
       await p.goto(BASE + '/poster.html');
       await p.screenshot({ path: out('queue-sign.png'), fullPage: true });
       await p.goto(BASE + '/scan.html');

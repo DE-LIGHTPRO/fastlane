@@ -37,6 +37,7 @@ export function searchProducts(catalogue, query, limit = 6) {
   if (!words.length) return [];
   const out = [];
   for (const p of catalogue.values()) {
+    if (p.loose) continue; // sold without a barcode: staff add these
     const hay = (p.name + ' ' + p.barcode).toLowerCase();
     if (words.every((w) => hay.includes(w))) out.push(p);
     if (out.length >= limit) break;

@@ -1,7 +1,7 @@
 import qrcode from '../vendor/qrcode.js';
-import { addItem, setQty, encodeBasket, priceBasket, newBasketId, formatNaira, codeAge, CODE_TTL_MS, MAX_QTY } from './basket.js';
+import { addItem, setQty, encodeBasket, priceBasket, newBasketId, formatNaira, codeAge, decodeReceipt, methodLabel, CODE_TTL_MS, MAX_QTY } from './basket.js';
 import { loadCatalogue, searchProducts } from './catalogue.js';
-import { beep, PRODUCT_FORMATS } from './scanner.js';
+import { beep, PRODUCT_FORMATS, QR_FORMATS } from './scanner.js';
 import { cameraPanel } from './camera-panel.js';
 import { $, escapeHtml, icon, show, setProgress, toast, confirmDialog, plural, qrSvg, keepAwake } from './ui.js';
 
@@ -19,7 +19,7 @@ function load() {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (s && Array.isArray(s.items)) return s;
   } catch { /* start clean */ }
-  return { id: '', ts: 0, items: [], locked: false, started: false };
+  return { id: '', ts: 0, items: [], locked: false, started: false, paid: null };
 }
 function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
 
@@ -138,6 +138,74 @@ async function showCode(renew = false) {
   releaseWake = await keepAwake();
 }
 
+// ---- Receipt: the shopper scans the code on the checker's phone after paying ----
+function claimError(message) {
+  const el = $('#claim-error');
+  el.querySelector('span').textContent = message;
+  el.hidden = !message;
+  if (message) beep(false);
+}
+
+let lastReceipt = { text: '', at: 0 };
+const receiptCamera = cameraPanel($('#rcam'), {
+  formats: QR_FORMATS,
+  note: $('#rcam-note'),
+  onCode(text) {
+    const now = Date.now();
+    if (text === lastReceipt.text && now - lastReceipt.at < 3000) return;
+    lastReceipt = { text, at: now };
+    let receipt;
+    try {
+      receipt = decodeReceipt(text);
+    } catch (err) {
+      return claimError(err.message);
+    }
+    if (receipt.id !== state.id) return claimError(`That receipt is for basket ${receipt.id}. Yours is ${state.id}.`);
+    state.paid = { at: receipt.at, total: receipt.total, units: receipt.units, method: receipt.method };
+    save();
+    beep(true);
+    showReceipt();
+  },
+});
+
+function showClaim() {
+  leaveCode();
+  claimError('');
+  show('claim');
+  receiptCamera.open();
+}
+
+function showReceipt() {
+  leaveCode();
+  receiptCamera.close();
+  const { lines, total } = priceBasket(state.items, catalogue);
+  const paid = state.paid;
+  $('#rx-id').textContent = state.id;
+  $('#rx-method').textContent = methodLabel(paid.method);
+  $('#rx-time').textContent = new Date(paid.at).toLocaleString([], { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  $('#rx-units').textContent = String(paid.units);
+  $('#rx-total').textContent = formatNaira(paid.total);
+  const rows = lines.map((l) => `<li>
+      <div class="line-main"><div class="line-name">${escapeHtml(l.name)}</div><div class="line-sub num">${l.qty} &times; ${formatNaira(l.price)}</div></div>
+      <div class="line-total">${formatNaira(l.lineTotal)}</div>
+    </li>`);
+  // The checker can add items that have no barcode, so the amount paid may be more than was scanned.
+  if (paid.total !== total) {
+    rows.push(`<li><div class="line-main"><div class="line-name">Added at the fast lane</div></div><div class="line-total">${formatNaira(paid.total - total)}</div></li>`);
+  }
+  $('#rx-lines').innerHTML = rows.join('');
+  $('#bar').hidden = true;
+  setProgress(3);
+  show('receipt');
+}
+
+$('#got-paid').addEventListener('click', showClaim);
+$('#claim-back').addEventListener('click', () => { receiptCamera.close(); showCode(); });
+$('#rx-new').addEventListener('click', () => {
+  state = { id: '', ts: 0, items: [], locked: false, started: true, paid: null };
+  showShop();
+});
+
 $('#start').addEventListener('click', () => { showShop(); camera.open(); });
 $('#done').addEventListener('click', () => showCode());
 $('#renew').addEventListener('click', () => showCode(true));
@@ -145,7 +213,7 @@ $('#edit').addEventListener('click', showShop);
 $('#fresh').addEventListener('click', async () => {
   const ok = await confirmDialog({ title: 'Start again?', body: 'This clears your basket and your pass.', confirm: 'Clear basket', danger: true });
   if (!ok) return;
-  state = { id: '', ts: 0, items: [], locked: false, started: true };
+  state = { id: '', ts: 0, items: [], locked: false, started: true, paid: null };
   showShop();
 });
 
@@ -181,6 +249,7 @@ try {
 } catch (err) {
   toast(err.message, 'warn');
 }
-if (state.locked && state.items.length) showCode();
+if (state.paid && state.items.length) showReceipt();
+else if (state.locked && state.items.length) showCode();
 else if (state.started) showShop();
 else { setProgress(0); show('welcome'); }

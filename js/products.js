@@ -51,7 +51,8 @@ $('#print').addEventListener('click', () => window.print());
 renderMine();
 try {
   const products = await loadSampleProducts();
-  $('#sheet').innerHTML = products.map((p) => `
+  // Items sold without a barcode are left off the sheet: staff add those at the fast lane.
+  $('#sheet').innerHTML = products.filter((p) => !p.loose).map((p) => `
     <div class="card" data-barcode="${p.barcode}">
       ${ean13Svg(p.barcode)}
       <div class="line-name">${escapeHtml(p.name)}</div>

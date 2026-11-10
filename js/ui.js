@@ -12,6 +12,8 @@ export function icon(name, cls = '') {
 
 export function show(id) {
   for (const el of document.querySelectorAll('[data-view]')) el.hidden = el.dataset.view !== id;
+  // A message about the last screen must not sit on top of the new one (it once covered the pass).
+  $('#toast')?.classList.remove('on');
   window.scrollTo(0, 0);
   const heading = $(`[data-view="${id}"] h1`);
   if (heading) {

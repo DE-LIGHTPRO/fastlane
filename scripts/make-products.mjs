@@ -23,5 +23,11 @@ const products = items.map(([name, naira], i) => {
   if (PICKUP.has(name)) product.pickup = true;
   return product;
 });
+// Items sold without a barcode. Shoppers cannot scan these; staff add them at the fast lane.
+const loose = [['Fresh bakery loaf', 1400], ['Eggs, crate of 30', 5800], ['Sachet water, bag of 20', 500]];
+loose.forEach(([name, naira], i) => {
+  const first12 = '299000' + String(100 + i).padStart(6, '0');
+  products.push({ barcode: first12 + ean13CheckDigit(first12), name, price: naira * 100, loose: true });
+});
 writeFileSync(new URL('../data/products.json', import.meta.url), JSON.stringify(products, null, 2) + '\n');
 console.log('wrote', products.length, 'products');

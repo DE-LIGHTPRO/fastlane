@@ -126,5 +126,23 @@
     "barcode": "2000000002613",
     "name": "Body lotion 400ml",
     "price": 360000
+  },
+  {
+    "barcode": "2990000001009",
+    "name": "Fresh bakery loaf",
+    "price": 140000,
+    "loose": true
+  },
+  {
+    "barcode": "2990000001016",
+    "name": "Eggs, crate of 30",
+    "price": 580000,
+    "loose": true
+  },
+  {
+    "barcode": "2990000001023",
+    "name": "Sachet water, bag of 20",
+    "price": 50000,
+    "loose": true
   }
 ]

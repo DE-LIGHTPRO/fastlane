@@ -4,7 +4,10 @@ import {
   addItem, setQty, encodeBasket, decodeBasket, codeAge, priceBasket, pickSpotChecks, checkMode,
   formatNaira, salesToCsv, newBasketId, CODE_TTL_MS, CLOCK_SKEW_MS, MAX_LINES, MAX_QTY, FULL_CHECK_UNITS,
   encodeOrder, decodeOrder, pickupSlots, sameLocalDay, MAX_PICKUP_QTY,
+  encodeReceipt, decodeReceipt, methodLabel,
 } from '../js/basket.js';
+import { searchProducts } from '../js/catalogue.js';
+import { summarise } from '../js/sales.js';
 import { ean13CheckDigit, isValidEan13, ean13Modules } from '../js/ean13.js';
 import { readFileSync } from 'node:fs';
 
@@ -32,7 +35,7 @@ test('every sample product has a valid, unique in-store barcode and a whole-kobo
   assert.equal(new Set(products.map((p) => p.barcode)).size, products.length);
   for (const p of products) {
     assert.ok(isValidEan13(p.barcode), p.barcode);
-    assert.ok(p.barcode.startsWith('20'), 'in-store prefix');
+    assert.ok(p.barcode.startsWith(p.loose ? '299' : '200'), 'in-store prefix');
     assert.ok(Number.isInteger(p.price) && p.price > 0);
   }
 });
@@ -130,6 +133,10 @@ test('sales export quotes commas and has one row per line', () => {
   assert.equal(rows.length, 3);
   assert.ok(rows[1].includes('"Instant noodles, chicken 70g"'));
   assert.ok(rows[1].endsWith(',2,350.00,700.00'));
+  assert.equal(rows[0], 'basket_id,time,lane,status,payment,barcode,item,qty,unit_price_naira,line_total_naira');
+  assert.ok(rows[1].includes(',self-scan,paid,cash,'));
+  const staff = salesToCsv([{ id: 'ABCDEF', at: 1794300000000, lane: 'staff-scan', status: 'paid', method: 'pos', total, units, lines }]);
+  assert.ok(staff.includes(',staff-scan,paid,pos,'));
 });
 
 test('an order code round-trips and uses only QR alphanumeric characters', () => {
@@ -174,4 +181,34 @@ test('eight sample products are offered for pickup, bread among them', () => {
   const offered = products.filter((p) => p.pickup);
   assert.equal(offered.length, 8);
   assert.ok(offered.some((p) => /bread/i.test(p.name)));
+});
+
+test('a receipt round-trips and uses only QR alphanumeric characters', () => {
+  const receipt = { id: 'ABCDEF', at: 1794300000000, total: 2100000, units: 4, method: 'transfer' };
+  const text = encodeReceipt(receipt);
+  assert.match(text, /^[0-9A-Z $%*+\-./:]+$/);
+  assert.deepEqual(decodeReceipt(text), receipt);
+  assert.equal(methodLabel('pos'), 'POS');
+});
+
+test('passes and damaged codes are not accepted as receipts', () => {
+  const good = encodeReceipt({ id: 'ABCDEF', at: 1794300000000, total: 5000, units: 1, method: 'cash' });
+  assert.throws(() => decodeReceipt(encodeBasket({ id: 'ABCDEF', ts: 1794300000000, items: [{ barcode: A, qty: 1 }] })), /not a FastLane receipt/);
+  assert.throws(() => decodeReceipt(good + '/EXTRA'), /incomplete/);
+  assert.throws(() => decodeReceipt(good.replace('CASH', 'CHEQUE')), /damaged/);
+  assert.throws(() => decodeReceipt(good.replace('/5000/', '/-5/')), /damaged/);
+});
+
+test('items without a barcode are never offered to shoppers in search', () => {
+  const loose = products.filter((p) => p.loose);
+  assert.equal(loose.length, 3);
+  assert.deepEqual(searchProducts(catalogue, 'bakery loaf'), []);
+  assert.deepEqual(searchProducts(catalogue, loose[0].barcode), []);
+  assert.equal(searchProducts(catalogue, 'rice')[0].name, 'Long grain rice 5kg');
+});
+
+test('the shift summary splits takings by payment method and counts staff scans', () => {
+  const sale = (extra) => ({ id: 'X', at: 1, status: 'paid', method: 'cash', total: 1000, lines: [], ...extra });
+  const sum = summarise([sale({}), sale({ method: 'pos', total: 2500, lane: 'staff-scan' }), sale({ status: 'rejected', method: '', total: 9999 })]);
+  assert.deepEqual(sum, { count: 2, total: 3500, cash: 1000, pos: 2500, transfer: 0, rejected: 1, staffScanned: 1 });
 });

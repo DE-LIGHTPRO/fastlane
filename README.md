@@ -42,12 +42,21 @@ To demo with real products, use **Add a real product** on `products.html`. Added
 | Page | Who uses it | What it does |
 |---|---|---|
 | `index.html` | Anyone | What FastLane is, what a store needs, the safeguards, links into the demo |
-| `scan.html` | Shopper in store | Scan barcodes, see a running total, show the fast-lane pass |
-| `checker.html` | Fast-lane staff | Scan the pass, check the basket, record payment, download the sales file |
+| `scan.html` | Shopper in store | Scan barcodes, see a running total, show the fast-lane pass, then scan the checker's receipt code to get a paid receipt |
+| `checker.html` | Fast-lane staff | Scan the pass, check the basket, add items without a barcode, record payment, show a receipt code, download the sales file |
+| `assist.html` | Staff in the queue | Scan a basket for a shopper who has no phone, then take payment |
 | `order.html` | Shopper at home | Pick essentials, choose a pickup time, pay (simulated), get a pickup pass |
 | `pickup.html` | Pickup counter staff | Packing list, mark packed, scan or type the order to hand it over |
 | `products.html` | Demo setup | Sample barcode sheet, add real products |
 | `poster.html` | Demo setup | Printable queue sign whose code opens `scan.html` on the site it is opened from |
+| `proposal.html` | The store | One-page pilot proposal to print or save as PDF |
+| `privacy.html` | Anyone | What the demo does with the camera and with data |
+
+## Contact details
+
+Edit `js/config.js` and fill in `CONTACT`. A contact section then appears on the landing page and on the pilot proposal. It stays hidden while the email and phone are both empty.
+
+The proposal says there is no charge for the pilot and promises on-site support on pilot nights. Change that wording in `proposal.html` if those are not your terms.
 
 ## Safeguards
 
@@ -67,7 +76,9 @@ To demo with real products, use **Add a real product** on `products.html`. Added
 - **No real product list.** `data/products.json` is sample data with made-up prices and in-store (20x) barcodes.
 - **No money moves at the fast lane either.** The checker takes payment the way the store does today and records the method.
 - **No link to the store's till or stock system.** The sales file (CSV) is the hand-off.
-- **Items without barcodes** (loose bread, weighed goods) are not handled.
+- **Weighed goods** are not handled. Items sold singly without a barcode are: staff add them from a short list (`"loose": true` in `data/products.json`).
+- **A receipt is not proof by itself.** The shopper's paid screen comes from scanning the checker's phone, and without a server the door cannot verify it independently.
+- **No staff sign-in.** Anyone who opens a staff page can use it.
 - **Pickup hours are placeholders** (8am to 9pm).
 
 ## Built in
@@ -95,7 +106,7 @@ npm test
 npm run test:e2e
 ```
 
-`npm test` runs 21 unit tests on the basket and order rules. `npm run test:e2e` runs 41 checks in a real browser (needs `npm install` and Playwright). They cover both flows end to end, the camera (the app's own barcode and passes are played back as a fake camera feed and read by the app's scanner), every refusal case, offline use, the security headers, sideways scrolling at 375px and 1440px, and accessibility in both themes.
+`npm test` runs 25 unit tests on the basket, order, receipt and sales rules. `npm run test:e2e` runs 47 checks in a real browser (needs `npm install` and Playwright). They cover both flows end to end, the camera (the app's own barcode and passes are played back as a fake camera feed and read by the app's scanner), every refusal case, offline use, the security headers, sideways scrolling at 375px and 1440px, and accessibility in both themes.
 
 ## Layout
 
@@ -103,7 +114,8 @@ npm run test:e2e
 - `js/scanner.js`, `js/camera-panel.js`: camera, torch and barcode reading
 - `js/ui.js`: icons, dialogs, toast, QR drawing, page shell
 - `js/ean13.js`: barcode check digits and drawing
-- `js/catalogue.js`, `js/orders.js`: product list and order storage on the device
+- `js/catalogue.js`, `js/orders.js`, `js/sales.js`: product list, order and sales storage on the device
+- `js/config.js`: contact details
 - `css/app.css`: the design system
 - `img/icons.svg`: icon set
-- `vendor/`: barcode reader (barcode-detector 3.2.3 with zxing-wasm, MIT), QR writer (qrcode-generator 2.0.4, MIT), Inter font (OFL 1.1). Rebuild the scripts with `npm install && npm run vendor`.
+- `vendor/`: barcode reader (barcode-detector 3.2.3 with zxing-wasm, MIT), QR writer (qrcode-generator 2.0.4, MIT), Inter and Bricolage Grotesque fonts (OFL 1.1). Rebuild the scripts with `npm install && npm run vendor`.

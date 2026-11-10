@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>Scan for a shopper | FastLane</title>
+<meta name="description" content="Staff scan a basket in the queue for a shopper who has no phone, then take payment.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/bricolage-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="appbar">
+  <a class="logo" href="index.html" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+  <span class="chip">Staff scan</span>
+  <span class="spacer"></span>
+  <span class="chip neutral">Demo</span>
+  <details class="menu">
+    <summary aria-label="Switch view"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#grid"/></svg></summary>
+    <nav aria-label="Views">
+      <div class="group">Shopper</div>
+      <a href="scan.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Scan in store</a>
+      <a href="order.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
+      <div class="group">Staff</div>
+      <a href="checker.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="assist.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#users"/></svg>Scan for a shopper</a>
+      <a href="pickup.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
+      <div class="group">Setup</div>
+      <a href="products.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
+      <a href="poster.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="proposal.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#receipt"/></svg>Pilot proposal</a>
+      <a href="index.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
+    </nav>
+  </details>
+</header>
+
+<main class="app">
+  <section data-view="scan">
+    <div class="page-head">
+      <h1>Scan for a shopper</h1>
+      <p>For shoppers without a phone. Scan their basket in the queue, then take payment.</p>
+    </div>
+    <div class="camera" id="cam">
+      <video data-cam="video" muted playsinline aria-label="Camera view"></video>
+      <div class="frame" data-cam="frame" hidden><i></i><b></b></div>
+      <button class="tool" data-cam="torch" type="button" aria-label="Torch" aria-pressed="false" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#torch"/></svg></button>
+      <div class="hint" data-cam="hint" hidden>Hold the barcode inside the frame</div>
+      <div class="idle" data-cam="idle">
+        <svg class="icon" aria-hidden="true"><use href="img/icons.svg#camera"/></svg>
+        <p>Scan the shopper's items while they wait in the queue.</p>
+        <button class="btn" data-cam="open" type="button">Open camera</button>
+      </div>
+    </div>
+    <div class="note warn" id="cam-note" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg><span></span></div>
+    <div class="field">
+      <label for="search">Find an item by name or barcode number</label>
+      <div class="input-icon"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#search"/></svg><input type="search" id="search" autocomplete="off" placeholder="For example: rice"></div>
+      <div class="results" id="results"></div>
+    </div>
+    <div>
+      <div class="label" id="extras-label">No barcode? Add it here</div>
+      <div class="results" id="extras" role="group" aria-labelledby="extras-label"></div>
+    </div>
+
+    <div class="section-title"><h2>This basket</h2><span class="chip neutral" id="basket-count">0 items</span></div>
+    <div class="card flush">
+      <div class="empty" id="empty"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg><b>Nothing scanned yet</b><span class="small">Scan the first item to begin.</span></div>
+      <ul class="lines" id="lines"></ul>
+    </div>
+    <button class="btn danger block" id="clear" type="button" hidden>Clear this basket</button>
+  </section>
+
+  <section data-view="pay" hidden>
+    <div class="page-head"><h1>Take payment</h1></div>
+    <div class="card hero-total">
+      <div class="muted small"><span id="p-units"></span></div>
+      <div class="big" id="p-total"></div>
+    </div>
+    <div>
+      <div class="label" id="methods-label">How is the shopper paying?</div>
+      <div class="pay" id="methods" role="group" aria-labelledby="methods-label">
+        <button class="btn" type="button" data-method="cash" aria-pressed="false"><svg class="icon lg" aria-hidden="true"><use href="img/icons.svg#cash"/></svg>Cash</button>
+        <button class="btn" type="button" data-method="pos" aria-pressed="false"><svg class="icon lg" aria-hidden="true"><use href="img/icons.svg#card"/></svg>POS</button>
+        <button class="btn" type="button" data-method="transfer" aria-pressed="false"><svg class="icon lg" aria-hidden="true"><use href="img/icons.svg#transfer"/></svg>Transfer</button>
+      </div>
+    </div>
+    <div class="note plain"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg><span>Take the money the way you do today. This demo records the method and does not move money.</span></div>
+    <button class="btn primary block" id="paid" type="button" disabled>Payment received</button>
+    <button class="btn block" id="back" type="button">Back to the basket</button>
+  </section>
+
+  <section data-view="done" hidden>
+    <div class="result">
+      <div class="tick"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg></div>
+      <h1>Paid</h1>
+      <p id="d-text"></p>
+    </div>
+    <div class="card">
+      <div class="kv"><span>Receipt</span><b class="mono" id="d-id"></b></div>
+      <div class="kv"><span>Time</span><b id="d-time"></b></div>
+      <div class="kv total"><span>Total paid</span><b id="d-total"></b></div>
+    </div>
+    <p class="small muted center">Show this screen to the door staff, or walk the shopper to the door.</p>
+    <button class="btn primary block" id="next" type="button">Next shopper</button>
+  </section>
+</main>
+
+<aside class="bar" id="bar" aria-label="Basket total">
+  <div class="bar-inner">
+    <div class="sum"><b id="total">₦0</b><span id="units">0 items</span></div>
+    <button class="btn primary" id="done" type="button" disabled>Take payment</button>
+  </div>
+</aside>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/assist.js"></script>
+</body>
+</html>

@@ -10,6 +10,7 @@
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/bricolage-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
 </head>
@@ -27,10 +28,12 @@
       <a href="order.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
       <div class="group">Staff</div>
       <a href="checker.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="assist.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#users"/></svg>Scan for a shopper</a>
       <a href="pickup.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
       <div class="group">Setup</div>
       <a href="products.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
       <a href="poster.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="proposal.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#receipt"/></svg>Pilot proposal</a>
       <a href="index.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
     </nav>
   </details>
@@ -106,10 +109,51 @@
     <div class="note warn" id="expired" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#clock"/></svg><span>This pass has expired. Get a new one before you reach the checker.</span></div>
     <button class="btn primary block" id="renew" type="button" hidden>Get a new pass</button>
     <p class="small muted center">A pass works once. Turn your screen brightness up.</p>
+    <button class="btn primary block" id="got-paid" type="button"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#receipt"/></svg>I have paid: get my receipt</button>
     <div class="row">
       <button class="btn" id="edit" type="button">Change my basket</button>
       <button class="btn" id="fresh" type="button">Start again</button>
     </div>
+  </section>
+
+  <section data-view="claim" hidden>
+    <div class="page-head">
+      <h1>Scan your receipt</h1>
+      <p>Point your camera at the receipt code on the checker's phone.</p>
+    </div>
+    <div class="camera" id="rcam">
+      <video data-cam="video" muted playsinline aria-label="Camera view"></video>
+      <div class="frame square" data-cam="frame" hidden><i></i></div>
+      <button class="tool" data-cam="torch" type="button" aria-label="Torch" aria-pressed="false" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#torch"/></svg></button>
+      <div class="hint" data-cam="hint" hidden>Fit the whole code inside the frame</div>
+      <div class="idle" data-cam="idle">
+        <svg class="icon" aria-hidden="true"><use href="img/icons.svg#camera"/></svg>
+        <p>Scan the code on the checker's phone to get your receipt.</p>
+        <button class="btn" data-cam="open" type="button">Open camera</button>
+      </div>
+    </div>
+    <div class="note warn" id="rcam-note" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg><span></span></div>
+    <div class="note bad" id="claim-error" role="alert" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg><span></span></div>
+    <button class="btn block" id="claim-back" type="button">Back to my pass</button>
+  </section>
+
+  <section data-view="receipt" hidden>
+    <div class="result">
+      <div class="tick"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg></div>
+      <h1>Paid</h1>
+      <p>Show this screen at the door.</p>
+    </div>
+    <div class="card">
+      <div class="kv"><span>Basket</span><b class="mono" id="rx-id"></b></div>
+      <div class="kv"><span>Paid by</span><b id="rx-method"></b></div>
+      <div class="kv"><span>Time</span><b id="rx-time"></b></div>
+      <div class="kv"><span>Items</span><b id="rx-units"></b></div>
+      <div class="kv total"><span>Total paid</span><b id="rx-total"></b></div>
+    </div>
+    <div class="card flush">
+      <ul class="lines" id="rx-lines"></ul>
+    </div>
+    <button class="btn block" id="rx-new" type="button">Start a new basket</button>
   </section>
 </main>
 

@@ -172,11 +172,38 @@ export function formatNaira(kobo) {
 
 export function salesToCsv(sales) {
   const esc = (v) => (/[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v));
-  const rows = [['basket_id', 'time', 'status', 'payment', 'barcode', 'item', 'qty', 'unit_price_naira', 'line_total_naira']];
+  const rows = [['basket_id', 'time', 'lane', 'status', 'payment', 'barcode', 'item', 'qty', 'unit_price_naira', 'line_total_naira']];
   for (const s of sales) {
     for (const l of s.lines) {
-      rows.push([s.id, new Date(s.at).toISOString(), s.status, s.method || '', l.barcode, l.name, l.qty, (l.price / 100).toFixed(2), (l.lineTotal / 100).toFixed(2)]);
+      rows.push([s.id, new Date(s.at).toISOString(), s.lane || 'self-scan', s.status, s.method || '', l.barcode, l.name, l.qty, (l.price / 100).toFixed(2), (l.lineTotal / 100).toFixed(2)]);
     }
   }
   return rows.map((r) => r.map(esc).join(',')).join('\n') + '\n';
+}
+
+// ---- Receipts ------------------------------------------------------------
+// After payment the checker's phone shows FR1/basket id/time paid/total in kobo/items/method.
+// The shopper scans it to turn their pass into a receipt they can show at the door.
+
+export const RECEIPT_PREFIX = 'FR1';
+export const METHODS = ['cash', 'pos', 'transfer'];
+
+export function encodeReceipt({ id, at, total, units, method }) {
+  return [RECEIPT_PREFIX, id, String(at), String(total), String(units), method.toUpperCase()].join('/');
+}
+
+export function decodeReceipt(text) {
+  const parts = String(text).trim().split('/');
+  if (parts[0] !== RECEIPT_PREFIX) throw new Error('This is not a FastLane receipt.');
+  if (parts.length !== 6) throw new Error('This receipt is incomplete.');
+  const [, id, atText, totalText, unitsText, methodText] = parts;
+  const method = methodText.toLowerCase();
+  if (!/^[A-Z2-9]{6}$/.test(id) || !/^\d{12,14}$/.test(atText) || !/^\d{1,12}$/.test(totalText) || !/^\d{1,4}$/.test(unitsText) || !METHODS.includes(method)) {
+    throw new Error('This receipt is damaged.');
+  }
+  return { id, at: Number(atText), total: Number(totalText), units: Number(unitsText), method };
+}
+
+export function methodLabel(method) {
+  return { cash: 'Cash', pos: 'POS', transfer: 'Transfer' }[method] || method;
 }
