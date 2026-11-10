@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="light">
 <meta name="theme-color" content="#001cdd">
 <title>Pilot proposal | FastLane</title>
 <meta name="description" content="A one-branch pilot proposal for FastLane: scan while you wait.">
@@ -44,30 +44,97 @@
     <button class="btn primary" id="print" type="button"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Print or save as PDF</button>
   </div>
   <article class="doc">
-    <header class="doc-head">
-      <div class="logo"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</div>
-      <span>Pilot proposal</span>
+    <header class="doc-cover">
+      <div class="doc-cover-top">
+        <div class="logo"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</div>
+        <span>Pilot proposal</span>
+      </div>
+      <h1>A shorter checkout queue on weekend nights</h1>
+      <p class="doc-lead">A one-branch pilot of FastLane, prepared for bokku! Mart.</p>
+      <dl class="doc-meta">
+        <div><dt>Prepared by</dt><dd id="doc-by">FastLane</dd></div>
+        <div><dt>Date</dt><dd id="doc-date"></dd></div>
+        <div><dt>Status</dt><dd>For discussion</dd></div>
+      </dl>
     </header>
-    <h1>A shorter checkout queue on weekend nights</h1>
-    <p class="doc-lead">A proposal for a one-branch pilot of FastLane at bokku! Mart.</p>
 
-    <div class="doc-grid">
-      <section><h2>The problem</h2><p>On weekend evenings the checkout queue at a busy branch can take 30 minutes or more. We have stood in it. The cause is simple: every item in every basket is scanned at the till, one at a time, while a long line of shoppers waits with nothing to do.</p></section>
-      <section><h2>The idea</h2><p>Let shoppers scan their own basket on their phone while they wait. At a fast lane, a checker scans one code, confirms the basket with a guided spot check, and takes payment the usual way: cash, POS or transfer. Shoppers without a phone can have their basket scanned in the queue by a member of staff.</p></section>
-      <section><h2>Why this is different</h2><ul><li>It starts in the queue, when shoppers have a reason to try it and can see the fast lane moving.</li><li>Nothing to install: it opens in the phone browser from a printed sign.</li><li>Payment does not change, so nobody has to trust a new payment app.</li><li>It is optional. The normal tills stay open.</li></ul></section>
-      <section><h2>The pilot</h2><ul><li><b>Where:</b> one branch with a known weekend queue.</li><li><b>When:</b> Friday to Sunday evenings, for four weekends.</li><li><b>How:</b> one or two existing tills become fast lanes, with a sign where the queue forms.</li></ul></section>
-      <section><h2>What we need from the store</h2><ul><li>An export of the product list: barcodes, names and prices.</li><li>One checker per fast lane, using a phone with a camera.</li><li>Mobile signal or shopper Wi-Fi in the queue area.</li><li>A short briefing with the branch team before the first night.</li></ul></section>
-      <section><h2>What we provide</h2><ul><li>The software, set up with the store product list.</li><li>The printed queue signs.</li><li>Training for the checkers, and support on site on pilot nights.</li><li>A report after each weekend.</li></ul></section>
-      <section><h2>How losses are controlled</h2><ul><li>Prices come from the store list, never from the shopper phone.</li><li>The checker must find named items, always including the most expensive one, and count the basket.</li><li>Baskets over 25 items are fully counted.</li><li>Each pass works once and expires after 15 minutes.</li><li>A sample of fast-lane baskets is fully re-scanned each night to measure losses.</li></ul></section>
-      <section><h2>What we will measure</h2><ul><li>Time in the queue, before and during the pilot.</li><li>The share of shoppers who choose the fast lane.</li><li>Shoppers served per till, per hour.</li><li>The mismatch rate found by the nightly audits.</li><li>What checkers and shoppers say about it.</li></ul></section>
-      <section><h2>Before the first night</h2><p>The demo at the address below runs without a server. Before a live pilot we will add a shared server, so every fast lane sees the same record of used passes, load the store product list, and agree how sales are reported back to the till system.</p></section>
-      <section><h2>Cost</h2><p>There is no charge for the pilot. If the results are good, pricing for a wider rollout is agreed afterwards.</p></section>
+    <div class="doc-facts">
+      <div><b>1</b><span>branch</span></div>
+      <div><b>4</b><span>weekends, Friday to Sunday evenings</span></div>
+      <div><b>1 to 2</b><span>existing tills used as fast lanes</span></div>
+      <div><b>₦0</b><span>charge for the pilot</span></div>
+    </div>
+
+    <div class="doc-main">
+      <section class="doc-sec">
+        <div class="doc-num">01</div>
+        <div class="doc-body"><h2>The problem</h2><p>On weekend evenings the checkout queue at a busy branch can take 30 minutes or more. We have stood in it. The cause is simple: every item in every basket is scanned at the till, one at a time, while a long line of shoppers waits with nothing to do.</p></div>
+      </section>
+      <section class="doc-sec">
+        <div class="doc-num">02</div>
+        <div class="doc-body"><h2>The proposal</h2><p>Let shoppers scan their own basket on their phone while they wait. At a fast lane, a checker scans one code, confirms the basket with a guided spot check, and takes payment the usual way: cash, POS or transfer. Shoppers without a phone can have their basket scanned in the queue by a member of staff.</p></div>
+      </section>
+      <section class="doc-sec">
+        <div class="doc-num">03</div>
+        <div class="doc-body"><h2>Why this is different</h2><ul><li><b>It starts in the queue.</b> Shoppers have a reason to try it, and can see the fast lane moving.</li><li><b>Nothing to install.</b> It opens in the phone browser from a printed sign.</li><li><b>Payment does not change.</b> Nobody has to trust a new payment app.</li><li><b>It is optional.</b> The normal tills stay open.</li></ul></div>
+      </section>
+      <section class="doc-sec">
+        <div class="doc-num">04</div>
+        <div class="doc-body"><h2>Scope of the pilot</h2><table class="doc-table">
+            <tr><th>Where</th><td>One branch with a known weekend queue</td></tr>
+            <tr><th>When</th><td>Friday to Sunday evenings, for four weekends</td></tr>
+            <tr><th>How</th><td>One or two existing tills become fast lanes, with a sign where the queue forms</td></tr>
+            <tr><th>Who</th><td>One checker per fast lane, plus the branch supervisor</td></tr>
+          </table></div>
+      </section>
+      <section class="doc-sec">
+        <div class="doc-num">05</div>
+        <div class="doc-body"><h2>Who provides what</h2><div class="doc-cols">
+            <div><h3>The store</h3><ul><li>An export of the product list: barcodes, names and prices</li><li>One checker per fast lane, using a phone with a camera</li><li>Mobile signal or shopper Wi-Fi in the queue area</li><li>A short briefing with the branch team before the first night</li></ul></div>
+            <div><h3>FastLane</h3><ul><li>The software, set up with the store product list</li><li>The printed queue signs</li><li>Training for the checkers, and support on site on pilot nights</li><li>A written report after each weekend</li></ul></div>
+          </div></div>
+      </section>
+      <section class="doc-sec">
+        <div class="doc-num">06</div>
+        <div class="doc-body"><h2>How losses are controlled</h2><ul><li>Prices come from the store list, never from the shopper phone.</li><li>The checker must find named items, always including the most expensive one, and count the basket.</li><li>Baskets over 25 items are fully counted.</li><li>Each pass works once and expires after 15 minutes.</li><li>A sample of fast-lane baskets is fully re-scanned each night to measure losses.</li></ul></div>
+      </section>
+      <section class="doc-sec">
+        <div class="doc-num">07</div>
+        <div class="doc-body"><h2>What we will measure</h2><table class="doc-table">
+            <tr><th>Queue time</th><td>Timed before the pilot and on every pilot night</td></tr>
+            <tr><th>Take-up</th><td>The share of shoppers who choose the fast lane</td></tr>
+            <tr><th>Throughput</th><td>Shoppers served per till, per hour</td></tr>
+            <tr><th>Losses</th><td>The mismatch rate found by the nightly audits</td></tr>
+            <tr><th>Experience</th><td>What checkers and shoppers say about it</td></tr>
+          </table></div>
+      </section>
+      <section class="doc-sec">
+        <div class="doc-num">08</div>
+        <div class="doc-body"><h2>Timeline</h2><ol class="doc-timeline">
+            <li><b>Before</b><span>Load the product list, set up the shared server, brief the branch team</span></li>
+            <li><b>Weekends 1 to 4</b><span>Pilot nights, with a short report after each weekend</span></li>
+            <li><b>After</b><span>Review the results together and decide on next steps</span></li>
+          </ol></div>
+      </section>
+      <section class="doc-sec">
+        <div class="doc-num">09</div>
+        <div class="doc-body"><h2>Before the first night</h2><p>The demo at the address below runs without a server. Before a live pilot we will add a shared server, so every fast lane sees the same record of used passes, load the store product list, and agree how sales are reported back to the till system.</p></div>
+      </section>
+      <section class="doc-sec">
+        <div class="doc-num">10</div>
+        <div class="doc-body"><h2>Cost</h2><p>There is no charge for the pilot. If the results are good, pricing for a wider rollout is agreed afterwards.</p></div>
+      </section>
     </div>
 
     <footer class="doc-foot">
-      <div><b>See the demo</b><span id="doc-url"></span></div>
-      <div id="doc-contact" hidden><b>Contact</b><span id="doc-contact-text"></span></div>
-      <p>Independent concept prepared for bokku! Mart. Not an official bokku! service.</p>
+      <div class="doc-next">
+        <h2>Next step</h2>
+        <p>A 30-minute meeting to walk through the demo and agree a branch and start date.</p>
+        <div class="doc-contact" id="doc-contact" hidden><b>Contact</b><span id="doc-contact-text"></span></div>
+        <div class="doc-contact"><b>See the demo</b><span id="doc-url"></span></div>
+      </div>
+      <div class="doc-qr" id="doc-qr" aria-hidden="true"></div>
+      <p class="doc-note">Independent concept prepared for bokku! Mart. Not an official bokku! service.</p>
     </footer>
   </article>
 </main>

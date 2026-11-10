@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>Queue timer | FastLane</title>
+<meta name="description" content="Time how long shoppers wait in a checkout queue.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/bricolage-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="appbar">
+  <a class="logo" href="./" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+  <span class="chip">Queue timer</span>
+  <span class="spacer"></span>
+  <span class="chip neutral">Demo</span>
+  <details class="menu">
+    <summary aria-label="Switch view"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#grid"/></svg></summary>
+    <nav aria-label="Views">
+      <div class="group">Shopper</div>
+      <a href="scan"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Scan in store</a>
+      <a href="order"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
+      <div class="group">Staff</div>
+      <a href="checker"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="assist"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#users"/></svg>Scan for a shopper</a>
+      <a href="pickup"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
+      <div class="group">Setup</div>
+      <a href="products"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
+      <a href="poster"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="proposal"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#receipt"/></svg>Pilot proposal</a>
+      <a href="./"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
+    </nav>
+  </details>
+</header>
+
+<main class="app">
+  <div class="page-head">
+    <h1>Queue timer</h1>
+    <p>Time how long shoppers wait to reach a till. Everything stays on this phone.</p>
+  </div>
+
+  <div class="field">
+    <label for="place">Where are you? (optional)</label>
+    <input type="text" id="place" maxlength="60" autocomplete="off" placeholder="For example: Bodija branch, Saturday night">
+  </div>
+
+  <button class="btn primary block" id="join" type="button"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#plus"/></svg>Someone joined the queue</button>
+  <p class="small muted center">Pick a person as they join the back of the line. Tap again when they reach a cashier.</p>
+
+  <div class="section-title"><h2>Following now</h2><span class="chip neutral" id="n-waiting">0</span></div>
+  <div class="card" id="none-waiting"><div class="empty"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#users"/></svg><b>Nobody being timed</b><span class="small">Follow three or four people at a time, not everyone.</span></div></div>
+  <div id="waiting"></div>
+
+  <div class="section-title"><h2>Count the queue</h2></div>
+  <div class="card stack">
+    <div class="row">
+      <div class="field"><label for="c-queue">People in the queue</label><input type="number" id="c-queue" min="0" max="999" inputmode="numeric"></div>
+      <div class="field"><label for="c-tills">Tills open</label><input type="number" id="c-tills" min="0" max="99" inputmode="numeric"></div>
+    </div>
+    <button class="btn block" id="count" type="button">Save this count</button>
+    <p class="small muted" id="last-count">Take a count every 10 to 15 minutes.</p>
+  </div>
+
+  <div class="section-title"><h2>Results so far</h2></div>
+  <div class="stats">
+    <div class="stat"><span>Shoppers timed</span><b id="s-timed">0</b></div>
+    <div class="stat"><span>Average wait</span><b id="s-avg">0:00</b></div>
+    <div class="stat"><span>Longest wait</span><b id="s-max">0:00</b></div>
+    <div class="stat"><span>Typical wait (median)</span><b id="s-med">0:00</b></div>
+    <div class="stat"><span>Left without paying</span><b id="s-left">0</b></div>
+    <div class="stat"><span>Longest queue</span><b id="s-queue">0</b></div>
+  </div>
+  <div class="note ok" id="summary" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#receipt"/></svg><span></span></div>
+  <div class="row">
+    <button class="btn" id="export" type="button"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#download"/></svg>Download file</button>
+    <button class="btn danger" id="reset" type="button">Start a new session</button>
+  </div>
+  <div class="note plain"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg><span>Ask the branch manager before you time a queue in their store. It is polite, and it is a good reason to start a conversation.</span></div>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/queue.js"></script>
+</body>
+</html>

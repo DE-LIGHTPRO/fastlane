@@ -8,6 +8,7 @@ import {
 } from '../js/basket.js';
 import { searchProducts } from '../js/catalogue.js';
 import { summarise } from '../js/sales.js';
+import { formatDuration, median, queueStats, summaryLine, queueCsv } from '../js/queue-stats.js';
 import { ean13CheckDigit, isValidEan13, ean13Modules } from '../js/ean13.js';
 import { readFileSync } from 'node:fs';
 
@@ -211,4 +212,36 @@ test('the shift summary splits takings by payment method and counts staff scans'
   const sale = (extra) => ({ id: 'X', at: 1, status: 'paid', method: 'cash', total: 1000, lines: [], ...extra });
   const sum = summarise([sale({}), sale({ method: 'pos', total: 2500, lane: 'staff-scan' }), sale({ status: 'rejected', method: '', total: 9999 })]);
   assert.deepEqual(sum, { count: 2, total: 3500, cash: 1000, pos: 2500, transfer: 0, rejected: 1, staffScanned: 1 });
+});
+
+test('queue timer: durations, median and the statistics for a session', () => {
+  assert.equal(formatDuration(0), '0:00');
+  assert.equal(formatDuration(65_400), '1:05');
+  assert.equal(formatDuration(31 * 60_000), '31:00');
+  assert.equal(median([]), 0);
+  assert.equal(median([5, 1, 3]), 3);
+  assert.equal(median([4, 1, 3, 2]), 2.5);
+  const min = 60_000;
+  const session = {
+    place: 'Test branch',
+    people: [
+      { n: 1, note: '', joined: 0, till: 20 * min, left: 0 },
+      { n: 2, note: 'red cap, two baskets', joined: 0, till: 40 * min, left: 0 },
+      { n: 3, note: '', joined: 0, till: 30 * min, left: 0 },
+      { n: 4, note: '', joined: 0, till: 0, left: 10 * min },
+      { n: 5, note: '', joined: 0, till: 0, left: 0 },
+    ],
+    counts: [{ at: 1, queue: 18, tills: 3 }, { at: 2, queue: 26, tills: 4 }, { at: 3, queue: 22, tills: 0 }],
+  };
+  const s = queueStats(session);
+  assert.deepEqual([s.timed, s.waiting, s.gaveUp], [3, 1, 1]);
+  assert.deepEqual([s.averageWait, s.medianWait, s.longestWait, s.shortestWait], [30 * min, 30 * min, 40 * min, 20 * min]);
+  assert.deepEqual([s.averageQueue, s.longestQueue, s.averageTills], [22, 26, 3.5]);
+  assert.equal(summaryLine(session), 'We timed 3 shoppers: the average wait to reach a till was 30 minutes and the longest was 40 minutes. The queue reached 26 people with 4 tills open. 1 of the people we followed left without reaching a till.');
+  assert.equal(summaryLine({ ...session, people: session.people.slice(0, 2) }), '', 'too few people to quote');
+  const csv = queueCsv(session).trim().split('\n');
+  assert.equal(csv.length, 1 + 5 + 3);
+  assert.ok(csv[2].includes('"red cap, two baskets"'));
+  assert.ok(csv[2].endsWith(',2400,,,'));
+  assert.ok(csv[8].endsWith(',22,0'));
 });

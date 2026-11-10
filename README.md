@@ -53,6 +53,7 @@ Addresses are clean: `scan.html` is served at `/scan`, `proposal.html` at `/prop
 | `poster.html` | Demo setup | Printable queue sign whose code opens `scan.html` on the site it is opened from |
 | `proposal.html` | The store | One-page pilot proposal to print or save as PDF |
 | `privacy.html` | Anyone | What the demo does with the camera and with data |
+| `queue-timer.html` | You | Not linked from the site. Time how long shoppers wait in a real queue, count the queue and tills, and get a sentence you can quote |
 
 ## Contact details
 
@@ -92,6 +93,14 @@ The proposal says there is no charge for the pilot and promises on-site support 
 - **Security headers** in `vercel.json`: a strict content security policy, camera limited to this site, no microphone or location.
 - **Accessible:** every page passes axe-core with zero violations in both themes, and works by keyboard.
 
+## Walkthrough video
+
+```bash
+npm run video
+```
+
+This records `docs/fastlane-demo.mp4`: a captioned, silent, one-minute walkthrough of the real app on two phone screens. Each phone's camera is fed the barcode or pass the other screen is showing, and the app's own scanner reads it. It needs Playwright and ffmpeg. The file is left out of git because of its size.
+
 ## Changing the look
 
 The current colours follow bokku! Mart's royal blue and yellow, because this build is a concept prepared for them. It uses no bokku! logo or artwork, and the landing page says it is independent work, not an official bokku! service. Keep that wording unless they adopt it.
@@ -108,7 +117,7 @@ npm test
 npm run test:e2e
 ```
 
-`npm test` runs 25 unit tests on the basket, order, receipt and sales rules. `npm run test:e2e` runs 47 checks in a real browser (needs `npm install` and Playwright). They cover both flows end to end, the camera (the app's own barcode and passes are played back as a fake camera feed and read by the app's scanner), every refusal case, offline use, the security headers, sideways scrolling at 375px and 1440px, and accessibility in both themes.
+`npm test` runs 26 unit tests on the basket, order, receipt, sales and queue-timer rules. `npm run test:e2e` runs 49 checks in a real browser (needs `npm install` and Playwright). They cover both flows end to end, the camera (the app's own barcode and passes are played back as a fake camera feed and read by the app's scanner), every refusal case, offline use, the security headers, sideways scrolling at 375px and 1440px, and accessibility in both themes.
 
 ## Layout
 

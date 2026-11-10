@@ -12,6 +12,8 @@ const assert = require('node:assert/strict');
 const PORT = 4199;
 const BASE = `http://localhost:${PORT}`;
 const PAGES = ['', 'scan', 'order', 'checker', 'assist', 'pickup', 'products', 'poster', 'proposal', 'privacy'];
+// Pages that exist but are not linked from the landing page.
+const UNLISTED = ['queue-timer'];
 const products = JSON.parse(readFileSync(join(__dirname, '..', 'data', 'products.json'), 'utf8'));
 const byName = (part) => products.find((p) => p.name.includes(part));
 const noodles = products[0];
@@ -84,7 +86,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     await step('every page loads with the security headers and a title', async () => {
       const page = await plain.newPage();
       watch(page, errors);
-      for (const name of PAGES) {
+      for (const name of [...PAGES, ...UNLISTED]) {
         const res = await page.goto(`${BASE}/${name}`);
         assert.equal(res.status(), 200, name);
         assert.match(res.headers()['content-security-policy'], /default-src 'self'/, name);
@@ -130,7 +132,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     await step('no page scrolls sideways at 375px or 1440px', async () => {
       for (const viewport of [phone, { width: 1440, height: 900 }]) {
         const page = await plain.newPage({ viewport });
-        for (const name of PAGES) {
+        for (const name of [...PAGES, ...UNLISTED]) {
           await page.goto(`${BASE}/${name}`);
           await page.waitForLoadState('networkidle');
           assert.ok(await noSideScroll(page), `${name} at ${viewport.width}px`);
@@ -642,6 +644,49 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await ctx.close();
     });
 
+    await step('the queue timer follows shoppers, takes counts and writes a quotable summary', async () => {
+      const ctx = await plain.newContext({ viewport: phone });
+      await ctx.clock.install({ time: new Date(2026, 10, 14, 19, 0) });
+      const page = await ctx.newPage();
+      watch(page, errors);
+      await page.goto(BASE + '/queue-timer');
+      await page.locator('#place').fill('Test branch');
+      for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Someone joined the queue' }).click();
+      await page.getByLabel('How to spot them (optional)').first().fill('red cap');
+      assert.equal(await page.locator('#n-waiting').textContent(), '3');
+      let elapsed = 0;
+      for (const [n, wait] of [[1, 20], [3, 30], [2, 40]]) {
+        await ctx.clock.fastForward((wait - elapsed) * 60_000);
+        elapsed = wait;
+        await page.locator(`[data-person="${n}"]`).getByRole('button', { name: 'Reached the till' }).click();
+      }
+      await page.getByRole('button', { name: 'Someone joined the queue' }).click();
+      await ctx.clock.fastForward(5 * 60_000);
+      assert.match(await page.locator('[data-person="4"] [data-clock]').textContent(), /^5:0\d$/);
+      await page.locator('[data-person="4"]').getByRole('button', { name: 'Left the queue' }).click();
+      await page.getByRole('button', { name: 'Save this count' }).click();
+      await page.getByText('Enter how many people are in the queue.').waitFor();
+      await page.locator('#c-queue').fill('26');
+      await page.locator('#c-tills').fill('4');
+      await page.getByRole('button', { name: 'Save this count' }).click();
+      assert.equal(await page.locator('#s-timed').textContent(), '3');
+      assert.match(await page.locator('#s-avg').textContent(), /^30:0\d$/);
+      assert.match(await page.locator('#s-max').textContent(), /^40:0\d$/);
+      assert.equal(await page.locator('#s-left').textContent(), '1');
+      assert.equal(await page.locator('#s-queue').textContent(), '26');
+      assert.equal(await page.locator('#summary span').textContent(), 'We timed 3 shoppers: the average wait to reach a till was 30 minutes and the longest was 40 minutes. The queue reached 26 people with 4 tills open. 1 of the people we followed left without reaching a till.');
+      await page.reload();
+      assert.equal(await page.locator('#s-timed').textContent(), '3');
+      assert.equal(await page.locator('#place').inputValue(), 'Test branch');
+      const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download file' }).click()]);
+      assert.equal(readFileSync(await download.path(), 'utf8').trim().split('\n').length, 1 + 4 + 1);
+      await page.getByRole('button', { name: 'Start a new session' }).click();
+      await page.getByRole('button', { name: 'Clear and start' }).click();
+      await page.getByText('New session started').waitFor();
+      assert.equal(await page.locator('#s-timed').textContent(), '0');
+      await ctx.close();
+    });
+
     // ---- 10. Proposal and contact details
     await step('contact details stay hidden until they are filled in, then appear on both pages', async () => {
       const emptyCtx = await plain.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
@@ -695,6 +740,19 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await ctx.close();
     });
 
+    await step('the landing page and proposal stay light on a dark-mode device; app screens go dark', async () => {
+      const ctx = await plain.newContext({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' });
+      const page = await ctx.newPage();
+      const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+      for (const name of ['', 'proposal']) {
+        await page.goto(`${BASE}/${name}`);
+        assert.equal(await bg(), 'rgb(245, 246, 251)', name || 'landing');
+      }
+      await page.goto(BASE + '/scan');
+      assert.equal(await bg(), 'rgb(7, 10, 31)');
+      await ctx.close();
+    });
+
     await step('no page has an accessibility violation, in light or dark mode', async () => {
       const axe = require.resolve('axe-core/axe.min.js');
       const fresh = Date.now();
@@ -703,10 +761,11 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
         'scan#shop': { 'fastlane.basket': { id: '', ts: 0, items: [{ barcode: rice.barcode, qty: 2 }], locked: false, started: true } },
         'scan#pass': { 'fastlane.basket': { id: 'ABCDEF', ts: fresh, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true } },
         'scan#receipt': { 'fastlane.basket': { id: 'ABCDEF', ts: fresh, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true, paid: { at: fresh, total: rice.price * 2, units: 2, method: 'cash' } } },
+        'queue-timer#busy': { 'fastlane.queue': { place: 'Test', started: fresh, people: [{ n: 1, note: 'red cap', joined: fresh, till: 0, left: 0 }], counts: [] } },
         'pickup#orders': { 'fastlane.orders': [{ id: 'KM4T7Q', ts: fresh, slot: fresh, items: [{ barcode: bread.barcode, qty: 2 }], total: bread.price * 2, units: 2, status: 'paid' }] },
       };
       for (const colorScheme of ['light', 'dark']) {
-        for (const target of [...PAGES, ...Object.keys(seeded)]) {
+        for (const target of [...PAGES, ...UNLISTED, ...Object.keys(seeded)]) {
           const ctx = await plain.newContext({ viewport: phone, colorScheme, bypassCSP: true });
           const [name] = target.split('#');
           if (seeded[target]) {
