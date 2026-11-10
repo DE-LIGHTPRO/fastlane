@@ -3,61 +3,95 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b6a52">
-<title>FastLane: order ahead</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>Order ahead | FastLane</title>
+<meta name="description" content="Reserve essentials now and collect them at the pickup counter.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<header class="top">
-  <div><div class="brand">Fast<span>Lane</span></div><div class="role">Order ahead</div></div>
-  <nav><a href="index.html">Scan in store</a><a href="checker.html">Checker</a><a href="pickup.html">Pickup</a><a href="products.html">Products</a></nav>
+<header class="appbar">
+  <a class="logo" href="index.html" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+  <span class="chip">Shopper</span>
+  <span class="spacer"></span>
+  <span class="chip neutral">Demo</span>
+  <details class="menu">
+    <summary aria-label="Switch view"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#grid"/></svg></summary>
+    <nav aria-label="Views">
+      <div class="group">Shopper</div>
+      <a href="scan.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Scan in store</a>
+      <a href="order.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
+      <div class="group">Staff</div>
+      <a href="checker.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="pickup.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
+      <div class="group">Setup</div>
+      <a href="products.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
+      <a href="poster.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="index.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
+    </nav>
+  </details>
 </header>
 
-<main>
+<main class="app">
+  <ol class="progress" aria-label="Steps">
+    <li>Choose</li><li>Pickup time</li><li>Collect</li>
+  </ol>
+
   <section data-view="browse">
-    <h1>Order ahead, collect at the counter</h1>
-    <p class="muted">Reserve your essentials now. Staff pack them and you collect at the pickup counter, with no queue.</p>
-    <div class="card">
+    <div class="page-head">
+      <h1>Order ahead</h1>
+      <p>Reserve your essentials now. Staff pack them and you collect at the pickup counter, with no queue.</p>
+    </div>
+    <div class="card flush">
       <ul class="lines" id="list"></ul>
     </div>
-    <p class="small muted" style="margin-top:12px">Up to 5 of each item per order. For anything else, shop in store and use the fast lane.</p>
+    <p class="small muted">Up to 5 of each item per order. For anything else, shop in store and use the fast lane.</p>
   </section>
 
   <section data-view="time" hidden>
-    <h1>When will you collect?</h1>
-    <div class="slots" id="slots"></div>
-    <h2>Your order</h2>
+    <div class="page-head"><h1>When will you collect?</h1></div>
+    <div class="slots" id="slots" role="group" aria-label="Pickup time"></div>
+    <div class="section-title"><h2>Your order</h2></div>
     <div class="card">
       <ul class="lines" id="summary"></ul>
-      <div class="kv" style="margin-top:6px"><span>Total</span><b id="t-total"></b></div>
+      <div class="kv total"><span>Total</span><b id="t-total"></b></div>
     </div>
-    <div class="note warn">Demo payment. No money is taken. In a live store this step pays the store by card or transfer.</div>
-    <button class="btn primary block" id="pay" disabled>Pay</button>
-    <button class="btn block" id="back" style="margin-top:8px">Change my order</button>
+    <div class="note warn"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg><span>Demo payment. No money is taken. In a live store this step pays the store by card or transfer.</span></div>
+    <button class="btn primary block" id="pay" type="button" disabled>Pay</button>
+    <button class="btn block" id="back" type="button">Change my order</button>
   </section>
 
   <section data-view="code" hidden>
-    <h1>Order paid</h1>
-    <p class="muted">Show this code at the pickup counter.</p>
-    <div class="qr" id="qr" aria-label="Your pickup code"></div>
-    <div class="card" style="margin-top:12px">
-      <div class="kv"><span>Order</span><b id="c-id"></b></div>
-      <div class="kv"><span>Collect</span><b id="c-slot"></b></div>
-      <div class="kv"><span>Paid</span><b id="c-total"></b></div>
+    <div class="page-head">
+      <h1>Order confirmed</h1>
+      <p>Show this pass at the pickup counter.</p>
     </div>
-    <div class="card">
+    <div class="pass">
+      <div class="pass-head"><b>Pickup pass</b><span class="timer" id="c-slot"></span></div>
+      <div class="pass-qr" id="qr"></div>
+      <div class="pass-cut"></div>
+      <div class="pass-body">
+        <div class="kv"><span>Order</span><b class="pass-id" id="c-id"></b></div>
+        <div class="kv total"><span>Paid</span><b id="c-total"></b></div>
+      </div>
+    </div>
+    <div class="card flush">
       <ul class="lines" id="c-lines"></ul>
     </div>
-    <button class="btn block" id="again" style="margin-top:12px">Place another order</button>
+    <button class="btn block" id="again" type="button">Place another order</button>
   </section>
 </main>
 
-<div class="bar" id="bar" hidden>
+<aside class="bar" id="bar" aria-label="Order total" hidden>
   <div class="bar-inner">
     <div class="sum"><b id="total">₦0</b><span id="units">0 items</span></div>
-    <button class="btn primary" id="next" disabled>Choose pickup time</button>
+    <button class="btn primary" id="next" type="button" disabled>Choose pickup time</button>
   </div>
-</div>
+</aside>
 <div id="toast" role="status" aria-live="polite"></div>
 <script type="module" src="js/order.js"></script>
 </body>

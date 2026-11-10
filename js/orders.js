@@ -22,10 +22,16 @@ export function findOrder(id) {
   return loadOrders().find((o) => o.id === id) || null;
 }
 
-export function slotLabel(slot, now = Date.now()) {
+// { day: 'Today', range: '7:00 PM to 7:30 PM' }
+export function slotParts(slot, now = Date.now()) {
   const t = (ms) => new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   const tomorrow = now + 24 * 60 * 60 * 1000;
   const day = sameLocalDay(slot, now) ? 'Today' : sameLocalDay(slot, tomorrow) ? 'Tomorrow'
     : new Date(slot).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
-  return `${day}, ${t(slot)} to ${t(slot + 30 * 60 * 1000)}`;
+  return { day, range: `${t(slot)} to ${t(slot + 30 * 60 * 1000)}` };
+}
+
+export function slotLabel(slot, now = Date.now()) {
+  const { day, range } = slotParts(slot, now);
+  return `${day}, ${range}`;
 }

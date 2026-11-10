@@ -3,45 +3,80 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>FastLane products</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>Products and barcodes | FastLane</title>
+<meta name="description" content="Sample barcode sheet for the FastLane demo, and a form to add real products.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<header class="top">
-  <div><div class="brand">Fast<span>Lane</span></div><div class="role">Products</div></div>
-  <nav><a href="index.html">Scan in store</a><a href="order.html">Order ahead</a><a href="checker.html">Checker</a><a href="pickup.html">Pickup</a></nav>
+<header class="appbar">
+  <a class="logo" href="index.html" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+  <span class="chip">Setup</span>
+  <span class="spacer"></span>
+  <span class="chip neutral">Demo</span>
+  <details class="menu">
+    <summary aria-label="Switch view"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#grid"/></svg></summary>
+    <nav aria-label="Views">
+      <div class="group">Shopper</div>
+      <a href="scan.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Scan in store</a>
+      <a href="order.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
+      <div class="group">Staff</div>
+      <a href="checker.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="pickup.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
+      <div class="group">Setup</div>
+      <a href="products.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
+      <a href="poster.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="index.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
+    </nav>
+  </details>
 </header>
-<main style="max-width:1100px">
-  <div class="no-print">
-    <h1>Products</h1>
-    <p class="muted">Sample items with made-up prices, for the demo only. Open this page on a laptop and scan the barcodes below with the shopper page on a phone.</p>
 
-    <h2>Add a real product</h2>
-    <div class="card" style="max-width:560px">
-      <p class="small muted">Scan any real item so it works in the demo. It is saved on this device only, so add it on the phone that plays the shopper and the phone that plays the checker.</p>
-      <div class="camera" id="cam-box" hidden>
-        <video id="video" muted playsinline></video>
-        <div class="aim"></div>
-      </div>
-      <div class="note warn" id="cam-note" hidden></div>
-      <button class="btn block" id="cam-on">Scan a barcode</button>
-      <form id="add">
-        <label for="f-barcode">Barcode number</label>
-        <input type="text" id="f-barcode" inputmode="numeric" pattern="\d{6,14}" required autocomplete="off">
-        <label for="f-name">Item name</label>
-        <input type="text" id="f-name" maxlength="60" required autocomplete="off">
-        <label for="f-price">Price in naira</label>
-        <input type="number" id="f-price" min="1" max="10000000" step="1" required inputmode="numeric">
-        <button class="btn primary block" style="margin-top:14px">Save product</button>
-      </form>
-      <ul class="lines" id="mine" style="margin-top:10px"></ul>
-    </div>
-
-    <h2>Sample barcode sheet</h2>
-    <p><button class="btn" id="print">Print this sheet</button></p>
+<main class="app wide">
+  <div class="page-head no-print">
+    <h1>Products and barcodes</h1>
+    <p>Sample items with made-up prices, for the demo only. Open this page on a laptop and scan the barcodes with the shopper page on a phone.</p>
   </div>
-  <div class="sheet" id="sheet"></div>
+  <div class="two-col">
+    <div class="no-print">
+      <div class="card stack">
+        <h2>Add a real product</h2>
+        <p class="small muted">Scan any real item so it works in the demo. It is saved on this device only, so add it on every phone you demo with.</p>
+        <div class="camera" id="cam">
+      <video data-cam="video" muted playsinline aria-label="Camera view"></video>
+      <div class="frame" data-cam="frame" hidden><i></i><b></b></div>
+      <button class="tool" data-cam="torch" type="button" aria-label="Torch" aria-pressed="false" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#torch"/></svg></button>
+      <div class="hint" data-cam="hint" hidden>Hold the barcode inside the frame</div>
+      <div class="idle" data-cam="idle">
+        <svg class="icon" aria-hidden="true"><use href="img/icons.svg#camera"/></svg>
+        <p>Scan a product to fill in its barcode number.</p>
+        <button class="btn" data-cam="open" type="button">Scan a barcode</button>
+      </div>
+    </div>
+    <div class="note warn" id="cam-note" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg><span></span></div>
+        <form id="add" novalidate>
+          <div class="field"><label for="f-barcode">Barcode number</label>
+            <input type="text" id="f-barcode" inputmode="numeric" autocomplete="off" placeholder="6 to 14 digits"></div>
+          <div class="field"><label for="f-name">Item name</label>
+            <input type="text" id="f-name" maxlength="60" autocomplete="off"></div>
+          <div class="field"><label for="f-price">Price in naira</label>
+            <input type="number" id="f-price" min="1" max="10000000" step="1" inputmode="numeric"></div>
+          <div class="field"><button class="btn primary block" type="submit">Save product</button></div>
+        </form>
+        <ul class="lines" id="mine"></ul>
+      </div>
+    </div>
+    <div>
+      <div class="section-title no-print"><h2>Sample barcode sheet</h2><button class="btn sm" id="print" type="button"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Print</button></div>
+      <div class="sheet" id="sheet"></div>
+    </div>
+  </div>
 </main>
+
 <div id="toast" role="status" aria-live="polite"></div>
 <script type="module" src="js/products.js"></script>
 </body>

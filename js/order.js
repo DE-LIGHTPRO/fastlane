@@ -1,8 +1,8 @@
 import qrcode from '../vendor/qrcode.js';
 import { encodeOrder, priceBasket, newBasketId, pickupSlots, formatNaira, MAX_PICKUP_QTY } from './basket.js';
 import { loadCatalogue } from './catalogue.js';
-import { saveOrder, findOrder, slotLabel } from './orders.js';
-import { $, escapeHtml, show, toast } from './ui.js';
+import { saveOrder, findOrder, slotLabel, slotParts } from './orders.js';
+import { $, escapeHtml, icon, show, setProgress, toast, plural, qrSvg, keepAwake } from './ui.js';
 
 const DRAFT = 'fastlane.order.draft';
 const LAST = 'fastlane.order.last';
@@ -12,6 +12,7 @@ let catalogue = new Map();
 let offered = [];
 let items = loadDraft();
 let slot = 0;
+let releaseWake = () => {};
 
 function loadDraft() {
   try {
@@ -21,7 +22,6 @@ function loadDraft() {
 }
 function saveDraft() { localStorage.setItem(DRAFT, JSON.stringify(items)); }
 function qtyOf(barcode) { return items.find((i) => i.barcode === barcode)?.qty || 0; }
-function plural(n) { return n === 1 ? '1 item' : n + ' items'; }
 
 function renderBrowse() {
   $('#list').innerHTML = offered.map((p) => {
@@ -29,12 +29,12 @@ function renderBrowse() {
     return `<li data-barcode="${p.barcode}">
       <div class="line-main">
         <div class="line-name">${escapeHtml(p.name)}</div>
-        <div class="line-sub">${formatNaira(p.price)}</div>
+        <div class="line-sub num">${formatNaira(p.price)}</div>
       </div>
       <div class="qty">
-        <button data-act="less" aria-label="One less ${escapeHtml(p.name)}" ${qty ? '' : 'disabled'}>&minus;</button>
-        <output>${qty}</output>
-        <button data-act="more" aria-label="One more ${escapeHtml(p.name)}" ${qty >= MAX_PICKUP_QTY ? 'disabled' : ''}>+</button>
+        <button type="button" data-act="less" aria-label="One less ${escapeHtml(p.name)}"${qty ? '' : ' disabled'}>${icon('minus')}</button>
+        <output aria-label="Quantity">${qty}</output>
+        <button type="button" data-act="more" aria-label="One more ${escapeHtml(p.name)}"${qty >= MAX_PICKUP_QTY ? ' disabled' : ''}>${icon('plus')}</button>
       </div>
     </li>`;
   }).join('');
@@ -46,12 +46,14 @@ function renderBrowse() {
 
 function linesHtml(lines) {
   return lines.map((l) => `<li>
-      <div class="line-main"><div class="line-name">${escapeHtml(l.name)}</div><div class="line-sub">${l.qty} &times; ${formatNaira(l.price)}</div></div>
+      <div class="line-main"><div class="line-name">${escapeHtml(l.name)}</div><div class="line-sub num">${l.qty} &times; ${formatNaira(l.price)}</div></div>
       <div class="line-total">${formatNaira(l.lineTotal)}</div>
     </li>`).join('');
 }
 
 function showBrowse() {
+  releaseWake();
+  setProgress(0);
   show('browse');
   $('#bar').hidden = false;
   renderBrowse();
@@ -60,28 +62,34 @@ function showBrowse() {
 function showTime() {
   const { lines, total } = priceBasket(items, catalogue);
   slot = 0;
-  $('#slots').innerHTML = pickupSlots(Date.now()).map((s) =>
-    `<button class="btn block" data-slot="${s}" aria-pressed="false">${slotLabel(s)}</button>`).join('');
+  $('#slots').innerHTML = pickupSlots(Date.now()).map((s) => {
+    const { day, range } = slotParts(s);
+    return `<button class="btn" type="button" data-slot="${s}" aria-pressed="false"><span>${range}</span><small>${day}</small></button>`;
+  }).join('');
   $('#summary').innerHTML = linesHtml(lines);
   $('#t-total').textContent = formatNaira(total);
   $('#pay').textContent = 'Pay ' + formatNaira(total);
   $('#pay').disabled = true;
   $('#bar').hidden = true;
+  setProgress(1);
   show('time');
 }
 
-function showCode(order) {
+async function showCode(order) {
   const { lines } = priceBasket(order.items, catalogue);
   const qr = qrcode(0, 'M');
   qr.addData(encodeOrder(order), 'Alphanumeric');
   qr.make();
-  $('#qr').innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true });
+  $('#qr').innerHTML = qrSvg(qr, 'Your pickup pass');
   $('#c-id').textContent = order.id;
   $('#c-slot').textContent = slotLabel(order.slot);
   $('#c-total').textContent = formatNaira(order.total);
   $('#c-lines').innerHTML = linesHtml(lines);
   $('#bar').hidden = true;
+  setProgress(2);
   show('code');
+  releaseWake();
+  releaseWake = await keepAwake();
 }
 
 $('#list').addEventListener('click', (e) => {
@@ -95,6 +103,8 @@ $('#list').addEventListener('click', (e) => {
   items.sort((a, b) => offered.findIndex((p) => p.barcode === a.barcode) - offered.findIndex((p) => p.barcode === b.barcode));
   saveDraft();
   renderBrowse();
+  const row = $(`#list li[data-barcode="${barcode}"]`);
+  (row.querySelector(`button[data-act="${btn.dataset.act}"]:not(:disabled)`) || row.querySelector('button:not(:disabled)'))?.focus();
 });
 
 $('#next').addEventListener('click', showTime);

@@ -3,70 +3,106 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b6a52">
-<title>FastLane pickup counter</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>Pickup counter | FastLane</title>
+<meta name="description" content="Pack order-ahead orders and hand them over.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<header class="top">
-  <div><div class="brand">Fast<span>Lane</span></div><div class="role">Pickup counter</div></div>
-  <nav><a href="index.html">Scan in store</a><a href="order.html">Order ahead</a><a href="checker.html">Checker</a><a href="products.html">Products</a></nav>
+<header class="appbar">
+  <a class="logo" href="index.html" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+  <span class="chip">Pickup</span>
+  <span class="spacer"></span>
+  <span class="chip neutral">Demo</span>
+  <details class="menu">
+    <summary aria-label="Switch view"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#grid"/></svg></summary>
+    <nav aria-label="Views">
+      <div class="group">Shopper</div>
+      <a href="scan.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Scan in store</a>
+      <a href="order.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
+      <div class="group">Staff</div>
+      <a href="checker.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="pickup.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
+      <div class="group">Setup</div>
+      <a href="products.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
+      <a href="poster.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="index.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
+    </nav>
+  </details>
 </header>
 
-<main>
+<main class="app">
   <section data-view="board">
-    <h1>Pickup orders</h1>
-
-    <h2>Hand over an order</h2>
-    <div class="card">
-      <div class="camera" id="cam-box" hidden>
-        <video id="video" muted playsinline></video>
-        <div class="aim square"></div>
-      </div>
-      <div class="note warn" id="cam-note" hidden></div>
-      <button class="btn block" id="cam-on">Scan the shopper's code</button>
-      <label for="find-id">Or type the order number, or paste the code text</label>
-      <input type="text" id="find-id" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="For example: KM4T7Q">
-      <button class="btn block" id="find" style="margin-top:8px">Find order</button>
-      <div class="note bad" id="find-error" hidden></div>
+    <div class="page-head">
+      <h1>Pickup counter</h1>
+      <p>Pack orders before their pickup time, then hand them over.</p>
     </div>
 
-    <h2>To pack <span class="muted" id="n-pack"></span></h2>
-    <p class="muted small" id="none-pack">No orders waiting.</p>
+    <div class="camera" id="cam">
+      <video data-cam="video" muted playsinline aria-label="Camera view"></video>
+      <div class="frame square" data-cam="frame" hidden><i></i></div>
+      <button class="tool" data-cam="torch" type="button" aria-label="Torch" aria-pressed="false" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#torch"/></svg></button>
+      <div class="hint" data-cam="hint" hidden>Fit the whole code inside the frame</div>
+      <div class="idle" data-cam="idle">
+        <svg class="icon" aria-hidden="true"><use href="img/icons.svg#camera"/></svg>
+        <p>Scan a pickup pass to hand an order over.</p>
+        <button class="btn" data-cam="open" type="button">Scan a pass</button>
+      </div>
+    </div>
+    <div class="note warn" id="cam-note" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg><span></span></div>
+    <div class="field">
+      <label for="find-id">Or type the order number</label>
+      <div class="row">
+        <input type="text" id="find-id" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="For example: KM4T7Q">
+        <button class="btn" id="find" type="button">Find order</button>
+      </div>
+    </div>
+    <div class="note bad" id="find-error" role="alert" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg><span></span></div>
+
+    <div class="section-title"><h2>To pack</h2><span class="chip warn" id="n-pack">0</span></div>
+    <div class="card" id="none-pack"><div class="empty"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg><b>No orders waiting</b><span class="small">New orders appear here as they are paid.</span></div></div>
     <div id="to-pack"></div>
 
-    <h2>Packed and waiting <span class="muted" id="n-ready"></span></h2>
-    <p class="muted small" id="none-ready">Nothing on the shelf.</p>
+    <div class="section-title"><h2>Packed and waiting</h2><span class="chip" id="n-ready">0</span></div>
+    <div class="card" id="none-ready"><div class="empty"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg><b>Nothing on the shelf</b><span class="small">Packed orders wait here for their shopper.</span></div></div>
     <div id="ready"></div>
 
-    <p class="small muted" style="margin-top:18px">Collected today: <b id="n-done">0</b></p>
-    <p class="small muted">Demo: orders placed on another phone appear here when the shopper's code is scanned. A live store sends them here the moment they are paid.</p>
+    <div class="stats">
+      <div class="stat wide"><span>Collected today</span><b id="n-done">0</b></div>
+    </div>
+    <div class="note plain"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg><span>Demo: an order placed on another phone appears here when its pass is scanned. A live store sends it here the moment it is paid.</span></div>
   </section>
 
   <section data-view="handover" hidden>
-    <h1>Hand over</h1>
+    <div class="page-head"><h1>Hand over</h1></div>
     <div class="card">
-      <div class="kv"><span>Order</span><b id="h-id"></b></div>
+      <div class="kv"><span>Order</span><b class="mono" id="h-id"></b></div>
       <div class="kv"><span>Collect</span><b id="h-slot"></b></div>
-      <div class="kv"><span>Paid</span><b id="h-total"></b></div>
+      <div class="kv total"><span>Paid</span><b id="h-total"></b></div>
     </div>
-    <div class="note warn" id="h-note" hidden></div>
-    <div class="card">
+    <div class="note warn" id="h-note" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg><span>This order is not packed yet. Pack these items now, then hand them over.</span></div>
+    <div class="card flush">
       <ul class="lines" id="h-lines"></ul>
     </div>
-    <button class="btn primary block" id="h-done" style="margin-top:14px">Handed to the shopper</button>
-    <button class="btn block" id="h-back" style="margin-top:8px">Back</button>
+    <button class="btn primary block" id="h-done" type="button">Handed to the shopper</button>
+    <button class="btn block" id="h-back" type="button">Back</button>
   </section>
 
   <section data-view="done" hidden>
-    <div class="tick" aria-hidden="true">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    <div class="result">
+      <div class="tick"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg></div>
+      <h1>Collected</h1>
+      <p id="d-text"></p>
     </div>
-    <h1 class="center">Collected</h1>
-    <p class="center muted" id="d-text"></p>
-    <button class="btn primary block" id="d-next">Next order</button>
+    <button class="btn primary block" id="d-next" type="button">Next order</button>
   </section>
 </main>
+
 <div id="toast" role="status" aria-live="polite"></div>
 <script type="module" src="js/pickup.js"></script>
 </body>

@@ -1,6 +1,6 @@
 // End-to-end check in a real browser, including the real camera path:
-// the barcode and the fast-lane QR code are rendered by the app, turned into
-// a fake camera feed, and read back by the app's own scanner.
+// the barcode and the passes are rendered by the app, turned into a fake
+// camera feed, and read back by the app's own scanner.
 //   npm run test:e2e
 const { chromium } = require('playwright');
 const { spawn } = require('node:child_process');
@@ -11,17 +11,28 @@ const assert = require('node:assert/strict');
 
 const PORT = 4199;
 const BASE = `http://localhost:${PORT}`;
+const PAGES = ['index.html', 'scan.html', 'order.html', 'checker.html', 'pickup.html', 'products.html', 'poster.html'];
 const products = JSON.parse(readFileSync(join(__dirname, '..', 'data', 'products.json'), 'utf8'));
 const byName = (part) => products.find((p) => p.name.includes(part));
 const noodles = products[0];
 const rice = byName('rice');
 const naira = (kobo) => '₦' + String(kobo / 100).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const phone = { width: 375, height: 760 };
 
 let passed = 0;
 async function step(name, fn) {
   await fn();
   passed++;
   console.log('ok', passed, '-', name);
+}
+
+// Runs the app's own scanner on a PNG, inside the page.
+function scanPng(page, png, formatsName) {
+  return page.evaluate(async ({ b64, formatsName }) => {
+    const scanner = await import('/js/scanner.js');
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    return scanner.detectIn(await createImageBitmap(new Blob([bytes], { type: 'image/png' })), scanner[formatsName]);
+  }, { b64: png.toString('base64'), formatsName });
 }
 
 // PNG -> uncompressed .y4m clip, which Chromium can play as a fake camera.
@@ -56,6 +67,7 @@ function watch(page, errors) {
 const camera = (file) => ({
   args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-video-capture=${file}`],
 });
+const noSideScroll = (page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
 (async () => {
   const server = spawn(process.execPath, [join(__dirname, '..', 'scripts', 'serve.mjs')], { env: { ...process.env, PORT: String(PORT) }, stdio: ['ignore', 'pipe', 'inherit'] });
@@ -64,9 +76,55 @@ const camera = (file) => ({
   const errors = [];
   const browsers = [];
   try {
-    // ---- 1. Barcode sheet, and a camera clip of one barcode
     const plain = await chromium.launch();
     browsers.push(plain);
+
+    // ---- 1. The site as a whole
+    await step('every page loads with the security headers and a title', async () => {
+      const page = await plain.newPage();
+      watch(page, errors);
+      for (const name of PAGES) {
+        const res = await page.goto(`${BASE}/${name}`);
+        assert.equal(res.status(), 200, name);
+        assert.match(res.headers()['content-security-policy'], /default-src 'self'/, name);
+        assert.match(await page.title(), /FastLane/, name);
+        await page.waitForLoadState('networkidle');
+      }
+      await page.close();
+    });
+
+    await step('the landing page links to every part of the demo', async () => {
+      const page = await plain.newPage({ viewport: { width: 1440, height: 900 } });
+      watch(page, errors);
+      await page.goto(BASE + '/');
+      await page.getByRole('heading', { level: 1 }).waitFor();
+      const hrefs = await page.locator('a[href$=".html"]').evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute('href')))]);
+      for (const name of PAGES) assert.ok(hrefs.includes(name), name);
+      await page.close();
+    });
+
+    await step('an unknown address shows the not-found page', async () => {
+      const page = await plain.newPage();
+      watch(page, []); // a 404 logs a console error by design
+      const res = await page.goto(BASE + '/nope/missing.html');
+      assert.equal(res.status(), 404);
+      await page.getByRole('heading', { name: 'This page does not exist' }).waitFor();
+      await page.close();
+    });
+
+    await step('no page scrolls sideways at 375px or 1440px', async () => {
+      for (const viewport of [phone, { width: 1440, height: 900 }]) {
+        const page = await plain.newPage({ viewport });
+        for (const name of PAGES) {
+          await page.goto(`${BASE}/${name}`);
+          await page.waitForLoadState('networkidle');
+          assert.ok(await noSideScroll(page), `${name} at ${viewport.width}px`);
+        }
+        await page.close();
+      }
+    });
+
+    // ---- 2. Barcode sheet, and a camera clip of one barcode
     const sheet = await plain.newPage({ viewport: { width: 1280, height: 900 } });
     watch(sheet, errors);
     await sheet.goto(BASE + '/products.html');
@@ -78,27 +136,32 @@ const camera = (file) => ({
 
     const barcodePng = await sheet.locator(`#sheet [data-barcode="${noodles.barcode}"] svg`).screenshot();
     await step('the app\'s scanner reads the barcodes the app draws', async () => {
-      const read = await sheet.evaluate(async (b64) => {
-        const { detectIn, PRODUCT_FORMATS } = await import('/js/scanner.js');
-        const blob = await (await fetch('data:image/png;base64,' + b64)).blob();
-        return detectIn(await createImageBitmap(blob), PRODUCT_FORMATS);
-      }, barcodePng.toString('base64'));
-      assert.deepEqual(read, [noodles.barcode]);
+      assert.deepEqual(await scanPng(sheet, barcodePng, 'PRODUCT_FORMATS'), [noodles.barcode]);
     });
     const barcodeClip = join(dir, 'barcode.y4m');
     await pngToY4m(sheet, barcodePng, barcodeClip);
 
-    // ---- 2. Shopper, on a phone-sized screen, scanning with the camera
+    await step('the queue sign carries a code that opens the shopper page', async () => {
+      const page = await plain.newPage();
+      watch(page, errors);
+      await page.goto(BASE + '/poster.html');
+      const png = await page.locator('#poster-qr svg').screenshot();
+      assert.deepEqual(await scanPng(page, png, 'QR_FORMATS'), [BASE + '/scan.html']);
+      assert.ok(await page.locator('#local-note').isVisible());
+      await page.close();
+    });
+
+    // ---- 3. Shopper, on a phone-sized screen, scanning with the camera
     const shopBrowser = await chromium.launch(camera(barcodeClip));
     browsers.push(shopBrowser);
-    const shopCtx = await shopBrowser.newContext({ viewport: { width: 375, height: 760 }, permissions: ['camera'] });
+    const shopCtx = await shopBrowser.newContext({ viewport: phone, permissions: ['camera'] });
     const shop = await shopCtx.newPage();
     watch(shop, errors);
-    await shop.goto(BASE + '/');
+    await shop.goto(BASE + '/scan.html');
 
     await step('the welcome screen explains the three steps', async () => {
       await shop.getByRole('heading', { name: 'Scan while you wait' }).waitFor();
-      assert.equal(await shop.locator('ol.steps li').count(), 3);
+      assert.equal(await shop.locator('[data-view="welcome"] .plain-list li').count(), 3);
     });
 
     await step('the camera scans a barcode and adds the item exactly once', async () => {
@@ -116,62 +179,98 @@ const camera = (file) => ({
       await shop.locator(`#lines li[data-barcode="${rice.barcode}"]`).waitFor();
     });
 
-    await step('quantity buttons change the total', async () => {
+    await step('quantity buttons change the total and keep keyboard focus', async () => {
       const row = shop.locator(`#lines li[data-barcode="${rice.barcode}"]`);
       await row.getByRole('button', { name: /One more/ }).click();
       assert.equal(await row.locator('output').textContent(), '2');
       assert.equal(await shop.locator('#total').textContent(), naira(noodles.price + rice.price * 2));
+      assert.match(await shop.evaluate(() => document.activeElement.getAttribute('aria-label')), /One more Long grain rice/);
     });
 
-    await step('the shopper page fits a 375px phone with no sideways scroll', async () => {
-      assert.ok(await shop.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
-    });
-
+    let passId = '';
     let codeText = '';
-    await step('the fast-lane screen shows a code, the basket id and the total', async () => {
+    await step('the pass shows a code, the basket id, the total and a countdown', async () => {
       await shop.getByRole('button', { name: 'I am at the fast lane' }).click();
       await shop.locator('#qr svg').waitFor();
-      assert.match(await shop.locator('#code-id').textContent(), /^[A-Z2-9]{6}$/);
+      passId = await shop.locator('#code-id').textContent();
+      assert.match(passId, /^[A-Z2-9]{6}$/);
       assert.equal(await shop.locator('#code-total').textContent(), naira(noodles.price + rice.price * 2));
-      assert.ok(await shop.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+      assert.match(await shop.locator('#code-timer').textContent(), /^Valid for 1[45]:\d\d$/);
+      assert.ok(await shop.locator('#renew').isHidden());
+      assert.ok(await noSideScroll(shop));
     });
 
     const qrPng = await shop.locator('#qr svg').screenshot();
     await step('the code on screen decodes to the basket', async () => {
-      const read = await shop.evaluate(async (b64) => {
-        const { detectIn, QR_FORMATS } = await import('/js/scanner.js');
-        const blob = await (await fetch('data:image/png;base64,' + b64)).blob();
-        return detectIn(await createImageBitmap(blob), QR_FORMATS);
-      }, qrPng.toString('base64'));
+      const read = await scanPng(shop, qrPng, 'QR_FORMATS');
       assert.equal(read.length, 1);
       codeText = read[0];
-      assert.match(codeText, new RegExp(`^FL1/[A-Z2-9]{6}/\\d{13}/${noodles.barcode}\\*1/${rice.barcode}\\*2$`));
+      assert.match(codeText, new RegExp(`^FL1/${passId}/\\d{13}/${noodles.barcode}\\*1/${rice.barcode}\\*2$`));
     });
 
-    await step('the basket survives a page reload', async () => {
+    await step('a reload keeps the same pass, and editing the basket makes a new one', async () => {
       await shop.reload();
       await shop.locator('#qr svg').waitFor();
+      assert.equal(await shop.locator('#code-id').textContent(), passId);
       await shop.getByRole('button', { name: 'Change my basket' }).click();
       assert.equal(await shop.locator('#lines li').count(), 2);
+      await shop.getByRole('button', { name: 'I am at the fast lane' }).click();
+      await shop.locator('#qr svg').waitFor();
+      assert.notEqual(await shop.locator('#code-id').textContent(), passId);
     });
     const qrClip = join(dir, 'qr.y4m');
     await pngToY4m(shop, qrPng, qrClip);
-    const basket = { id: codeText.split('/')[1] };
     const expectedTotal = noodles.price + rice.price * 2;
 
-    // ---- 3. Checker, scanning the shopper's code with the camera
+    await step('an expired pass says so and can be renewed', async () => {
+      const ctx = await plain.newContext({ viewport: phone });
+      await ctx.clock.install({ time: new Date(2026, 10, 14, 20, 0) });
+      const page = await ctx.newPage();
+      watch(page, errors);
+      await page.goto(BASE + '/scan.html');
+      await page.getByRole('button', { name: 'Start scanning' }).click();
+      await page.locator('#search').fill('rice');
+      await page.locator('#results button').first().click();
+      await page.getByRole('button', { name: 'I am at the fast lane' }).click();
+      const first = await page.locator('#code-id').textContent();
+      await ctx.clock.fastForward('16:00');
+      await page.getByRole('button', { name: 'Get a new pass' }).waitFor();
+      assert.equal(await page.locator('#code-timer').textContent(), 'Expired');
+      await page.getByRole('button', { name: 'Get a new pass' }).click();
+      assert.notEqual(await page.locator('#code-id').textContent(), first);
+      assert.match(await page.locator('#code-timer').textContent(), /^Valid for/);
+      await ctx.close();
+    });
+
+    await step('starting again asks first, then clears the basket', async () => {
+      const page = await plain.newPage({ viewport: phone });
+      watch(page, errors);
+      await page.goto(BASE + '/scan.html');
+      await page.getByRole('button', { name: 'Start scanning' }).click();
+      await page.locator('#search').fill('rice');
+      await page.locator('#results button').first().click();
+      await page.getByRole('button', { name: 'I am at the fast lane' }).click();
+      await page.getByRole('button', { name: 'Start again' }).click();
+      await page.getByRole('button', { name: 'Cancel' }).click();
+      await page.locator('#qr svg').waitFor();
+      await page.getByRole('button', { name: 'Start again' }).click();
+      await page.getByRole('button', { name: 'Clear basket' }).click();
+      await page.getByText('Your basket is empty').waitFor();
+      await page.close();
+    });
+
+    // ---- 4. Checker, scanning the shopper's pass with the camera
     const checkBrowser = await chromium.launch(camera(qrClip));
     browsers.push(checkBrowser);
-    const checkCtx = await checkBrowser.newContext({ viewport: { width: 375, height: 760 }, permissions: ['camera'] });
+    const checkCtx = await checkBrowser.newContext({ viewport: phone, permissions: ['camera'] });
     const check = await checkCtx.newPage();
     watch(check, errors);
-    check.on('dialog', (d) => d.accept());
     await check.goto(BASE + '/checker.html');
 
-    await step('the checker camera reads the code and shows the priced basket', async () => {
+    await step('the checker camera reads the pass and shows the priced basket', async () => {
       await check.getByRole('button', { name: 'Open camera' }).click();
       await check.getByRole('heading', { name: 'Check the basket' }).waitFor({ timeout: 20000 });
-      assert.equal(await check.locator('#r-id').textContent(), basket.id);
+      assert.equal(await check.locator('#r-id').textContent(), passId);
       assert.equal(await check.locator('#r-total').textContent(), naira(expectedTotal));
       assert.equal(await check.locator('#r-units').textContent(), '3');
     });
@@ -184,7 +283,7 @@ const camera = (file) => ({
       assert.equal(n, 3); // two lines to find, plus the count
       for (let i = 0; i < n - 1; i++) await boxes.nth(i).check();
       assert.ok(await accept.isDisabled());
-      await boxes.nth(n - 1).check();
+      await check.getByLabel('I counted 3 items in the basket').check();
       assert.ok(await accept.isEnabled());
       await accept.click();
     });
@@ -198,17 +297,21 @@ const camera = (file) => ({
       await check.getByRole('heading', { name: 'Paid' }).waitFor();
     });
 
-    await step('the same code is refused a second time', async () => {
-      await check.getByRole('button', { name: 'Next shopper' }).click(); // camera still sees the same code
+    await step('the same pass is refused a second time', async () => {
+      await check.getByRole('button', { name: 'Next shopper' }).click(); // camera still sees the same pass
       await check.locator('#scan-error:not([hidden])').waitFor({ timeout: 20000 });
       assert.match(await check.locator('#scan-error').textContent(), /already paid/);
       assert.equal(await check.locator('#sum-count').textContent(), '1');
       assert.equal(await check.locator('#sum-total').textContent(), naira(expectedTotal));
+      assert.equal(await check.locator('#sum-pos').textContent(), naira(expectedTotal));
     });
 
-    // ---- 4. Refusals, using the paste box so each case is exact
+    // ---- 5. Refusals, using the paste box so each case is exact
     await check.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-    await check.locator('details summary').click();
+    await check.locator('details.fallback summary').click();
+    const toScan = () => check.evaluate(() => {
+      for (const el of document.querySelectorAll('[data-view]')) el.hidden = el.dataset.view !== 'scan';
+    });
     const paste = async (text) => {
       await check.locator('#paste').fill(text);
       await check.getByRole('button', { name: 'Open basket' }).click();
@@ -220,7 +323,7 @@ const camera = (file) => ({
       assert.match(await check.locator('#scan-error').textContent(), /not a fast-lane code/);
     });
 
-    await step('a code older than 15 minutes is refused', async () => {
+    await step('a pass older than 15 minutes is refused', async () => {
       await paste(`FL1/QQQQQQ/${now - 16 * 60 * 1000}/${rice.barcode}*1`);
       assert.match(await check.locator('#scan-error').textContent(), /more than 15 minutes old/);
     });
@@ -233,10 +336,11 @@ const camera = (file) => ({
       assert.ok(await check.getByRole('button', { name: 'Basket is correct' }).isDisabled());
     });
 
-    await step('a mismatched basket is sent to a normal till and its code stops working', async () => {
+    await step('a mismatched basket is sent to a normal till and its pass stops working', async () => {
       await check.getByRole('button', { name: 'Does not match' }).click();
+      await check.getByRole('button', { name: 'Send to till' }).click();
       await check.getByRole('heading', { name: 'Send to a normal till' }).waitFor();
-      await check.evaluate(() => { document.querySelector('[data-view="done"]').hidden = true; document.querySelector('[data-view="scan"]').hidden = false; });
+      await toScan();
       await paste(`FL1/WWWWWW/${now}/${rice.barcode}*1`);
       assert.match(await check.locator('#scan-error').textContent(), /sent to a normal till/);
       assert.equal(await check.locator('#sum-rejected').textContent(), '1');
@@ -250,41 +354,51 @@ const camera = (file) => ({
     });
 
     await step('the sales file downloads with one row per item line', async () => {
-      await check.evaluate(() => { document.querySelector('[data-view="review"]').hidden = true; document.querySelector('[data-view="scan"]').hidden = false; });
-      const [download] = await Promise.all([check.waitForEvent('download'), check.getByRole('button', { name: 'Download sales file' }).click()]);
+      await toScan();
+      const [download] = await Promise.all([check.waitForEvent('download'), check.getByRole('button', { name: 'Sales file' }).click()]);
       const csv = readFileSync(await download.path(), 'utf8').trim().split('\n');
       assert.equal(csv[0], 'basket_id,time,status,payment,barcode,item,qty,unit_price_naira,line_total_naira');
-      assert.equal(csv.filter((r) => r.startsWith(basket.id + ',')).length, 2);
+      assert.equal(csv.filter((r) => r.startsWith(passId + ',')).length, 2);
       assert.ok(csv.some((r) => r.includes(',paid,pos,')));
       assert.ok(csv.some((r) => r.includes(',rejected,,')));
     });
 
-    await step('the checker page fits a 375px phone with no sideways scroll', async () => {
-      assert.ok(await check.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+    await step('ending the shift asks first, then clears the totals', async () => {
+      await check.getByRole('button', { name: 'End shift' }).click();
+      await check.locator('dialog').getByRole('button', { name: 'Cancel' }).click();
+      assert.equal(await check.locator('#sum-count').textContent(), '1');
+      await check.getByRole('button', { name: 'End shift' }).click();
+      await check.locator('dialog').getByRole('button', { name: 'End shift' }).click();
+      await check.getByText('Shift cleared').waitFor();
+      assert.equal(await check.locator('#sum-count').textContent(), '0');
+      assert.equal(await check.locator('#sum-total').textContent(), naira(0));
     });
 
-    // ---- 5. Adding a real product on the Products page
+    // ---- 6. Adding a real product on the Products page
     await step('a product added on this device can be found by the shopper', async () => {
       const page = await shopCtx.newPage();
       watch(page, errors);
       await page.goto(BASE + '/products.html');
+      await page.getByRole('button', { name: 'Save product' }).click();
+      await page.getByText('The barcode must be 6 to 14 digits.').waitFor();
       await page.locator('#f-barcode').fill('6151234567890');
       await page.locator('#f-name').fill('Test biscuit');
       await page.locator('#f-price').fill('500');
       await page.getByRole('button', { name: 'Save product' }).click();
       await page.locator('#mine li[data-barcode="6151234567890"]').waitFor();
-      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
-      await page.goto(BASE + '/');
+      await page.goto(BASE + '/scan.html');
+      await page.getByRole('button', { name: 'Change my basket' }).click();
       await page.locator('#search').fill('biscuit');
       await page.locator('#results button[data-barcode="6151234567890"]').click();
       await page.locator('#lines li[data-barcode="6151234567890"]').waitFor();
+      await page.close();
     });
 
-    // ---- 6. Order ahead, then the pickup counter
+    // ---- 7. Order ahead, then the pickup counter
     const bread = byName('bread');
     const water = byName('water');
     const saturdayEvening = new Date(2026, 10, 14, 18, 10);
-    const orderCtx = await plain.newContext({ viewport: { width: 375, height: 760 } });
+    const orderCtx = await plain.newContext({ viewport: phone });
     await orderCtx.clock.install({ time: saturdayEvening });
     const order = await orderCtx.newPage();
     watch(order, errors);
@@ -308,7 +422,9 @@ const camera = (file) => ({
     await step('pickup times start after the packing lead time and one must be chosen before paying', async () => {
       await order.getByRole('button', { name: 'Choose pickup time' }).click();
       assert.equal(await order.locator('#slots button').count(), 4);
-      assert.match(await order.locator('#slots button').first().textContent(), /^Today, 7:00/);
+      const firstSlot = await order.locator('#slots button').first().textContent();
+      assert.match(firstSlot, /^7:00/);
+      assert.match(firstSlot, /Today/);
       const pay = order.locator('#pay');
       assert.ok(await pay.isDisabled());
       assert.equal(await pay.textContent(), 'Pay ' + naira(orderTotal));
@@ -316,26 +432,22 @@ const camera = (file) => ({
       await pay.click();
     });
 
-    await step('a paid order shows a pickup code that decodes to the order', async () => {
-      await order.getByRole('heading', { name: 'Order paid' }).waitFor();
+    await step('a confirmed order shows a pickup pass that decodes to the order', async () => {
+      await order.getByRole('heading', { name: 'Order confirmed' }).waitFor();
       orderId = await order.locator('#c-id').textContent();
       assert.match(orderId, /^[A-Z2-9]{6}$/);
       assert.equal(await order.locator('#c-total').textContent(), naira(orderTotal));
+      assert.match(await order.locator('#c-slot').textContent(), /^Today, 7:00/);
       const png = await order.locator('#qr svg').screenshot();
-      const read = await order.evaluate(async (b64) => {
-        const { detectIn, QR_FORMATS } = await import('/js/scanner.js');
-        const blob = await (await fetch('data:image/png;base64,' + b64)).blob();
-        return detectIn(await createImageBitmap(blob), QR_FORMATS);
-      }, png.toString('base64'));
-      orderText = read[0];
+      orderText = (await scanPng(order, png, 'QR_FORMATS'))[0];
       const slot = saturdayEvening.getTime() + 50 * 60 * 1000;
       assert.equal(orderText, `FP1/${orderId}/${orderText.split('/')[2]}/${slot}/${bread.barcode}*2/${water.barcode}*1`);
-      assert.ok(await order.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+      assert.ok(await noSideScroll(order));
     });
 
-    await step('the pickup code is still there after a reload', async () => {
+    await step('the pickup pass is still there after a reload', async () => {
       await order.reload();
-      await order.getByRole('heading', { name: 'Order paid' }).waitFor();
+      await order.getByRole('heading', { name: 'Order confirmed' }).waitFor();
       assert.equal(await order.locator('#c-id').textContent(), orderId);
     });
 
@@ -346,10 +458,12 @@ const camera = (file) => ({
     await step('the order appears on the staff packing list and can be marked packed', async () => {
       const card = counter.locator(`#to-pack [data-order="${orderId}"]`);
       await card.waitFor();
-      assert.match(await card.textContent(), /2 × Sliced bread/);
+      assert.match(await card.textContent(), /2 ×\s+Sliced bread/);
+      assert.equal(await counter.locator('#n-pack').textContent(), '1');
       await card.getByRole('button', { name: 'Mark as packed' }).click();
       await counter.locator(`#ready [data-order="${orderId}"]`).waitFor();
       assert.equal(await counter.locator('#to-pack .card').count(), 0);
+      assert.equal(await counter.locator('#n-ready').textContent(), '1');
     });
 
     await step('a packed order is handed over by its order number', async () => {
@@ -370,12 +484,8 @@ const camera = (file) => ({
       assert.match(await counter.locator('#find-error').textContent(), /already collected/);
     });
 
-    await step('the pickup page fits a 375px phone with no sideways scroll', async () => {
-      assert.ok(await counter.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
-    });
-
     // A second staff phone that has never seen the order.
-    const otherCtx = await plain.newContext({ viewport: { width: 375, height: 760 } });
+    const otherCtx = await plain.newContext({ viewport: phone });
     await otherCtx.clock.install({ time: saturdayEvening });
     const other = await otherCtx.newPage();
     watch(other, errors);
@@ -385,7 +495,7 @@ const camera = (file) => ({
       await other.getByRole('button', { name: 'Find order' }).click();
     };
 
-    await step('on another device the code brings the order with it, flagged as not packed', async () => {
+    await step('on another device the pass brings the order with it, flagged as not packed', async () => {
       await find(orderId);
       assert.match(await other.locator('#find-error').textContent(), /not on this device/);
       await find(orderText);
@@ -402,12 +512,57 @@ const camera = (file) => ({
       assert.match(await other.locator('#find-error').textContent(), /not today/);
     });
 
-    await step('fast-lane and order codes are refused at the wrong counter', async () => {
+    await step('fast-lane and pickup passes are refused at the wrong counter', async () => {
       await find(`FL1/ABCDEF/${saturdayEvening.getTime()}/${bread.barcode}*1`);
       assert.match(await other.locator('#find-error').textContent(), /fast-lane code/);
-      await check.locator('#paste').fill(orderText);
-      await check.getByRole('button', { name: 'Open basket' }).click();
+      await toScan();
+      await paste(orderText);
       assert.match(await check.locator('#scan-error').textContent(), /order-ahead code/);
+    });
+
+    // ---- 8. Offline, accessibility
+    await step('pages keep working with no network after the first visit', async () => {
+      const ctx = await plain.newContext({ viewport: phone });
+      const page = await ctx.newPage();
+      await page.goto(BASE + '/scan.html');
+      await page.evaluate(() => navigator.serviceWorker.ready);
+      await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+      await ctx.setOffline(true);
+      await page.goto(BASE + '/scan.html');
+      await page.getByRole('button', { name: 'Start scanning' }).click();
+      await page.locator('#search').fill('bread');
+      await page.locator('#results button').first().click();
+      await page.locator('#lines li').waitFor();
+      await page.goto(BASE + '/checker.html');
+      await page.getByRole('heading', { name: 'Scan the shopper\'s pass' }).waitFor();
+      await ctx.close();
+    });
+
+    await step('no page has an accessibility violation, in light or dark mode', async () => {
+      const axe = require.resolve('axe-core/axe.min.js');
+      const fresh = Date.now();
+      // Screens that only appear part-way through a flow, reached by seeding the browser's storage.
+      const seeded = {
+        'scan.html#shop': { 'fastlane.basket': { id: '', ts: 0, items: [{ barcode: rice.barcode, qty: 2 }], locked: false, started: true } },
+        'scan.html#pass': { 'fastlane.basket': { id: 'ABCDEF', ts: fresh, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true } },
+        'pickup.html#orders': { 'fastlane.orders': [{ id: 'KM4T7Q', ts: fresh, slot: fresh, items: [{ barcode: bread.barcode, qty: 2 }], total: bread.price * 2, units: 2, status: 'paid' }] },
+      };
+      for (const colorScheme of ['light', 'dark']) {
+        for (const target of [...PAGES, ...Object.keys(seeded)]) {
+          const ctx = await plain.newContext({ viewport: phone, colorScheme, bypassCSP: true });
+          const [name] = target.split('#');
+          if (seeded[target]) {
+            await ctx.addInitScript((data) => { for (const [k, v] of Object.entries(data)) localStorage.setItem(k, JSON.stringify(v)); }, seeded[target]);
+          }
+          const page = await ctx.newPage();
+          await page.goto(`${BASE}/${name}`);
+          await page.waitForLoadState('networkidle');
+          await page.addScriptTag({ path: axe });
+          const violations = await page.evaluate(async () => (await window.axe.run()).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`));
+          assert.deepEqual(violations, [], `${target} (${colorScheme})`);
+          await ctx.close();
+        }
+      }
     });
 
     await step('no page logged an error', async () => {

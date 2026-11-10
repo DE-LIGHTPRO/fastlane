@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>Scan while you wait | FastLane</title>
+<meta name="description" content="Scan your own basket while you queue, then pay at the fast lane.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="appbar">
+  <a class="logo" href="index.html" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+  <span class="chip">Shopper</span>
+  <span class="spacer"></span>
+  <span class="chip neutral">Demo</span>
+  <details class="menu">
+    <summary aria-label="Switch view"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#grid"/></svg></summary>
+    <nav aria-label="Views">
+      <div class="group">Shopper</div>
+      <a href="scan.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Scan in store</a>
+      <a href="order.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
+      <div class="group">Staff</div>
+      <a href="checker.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="pickup.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
+      <div class="group">Setup</div>
+      <a href="products.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
+      <a href="poster.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="index.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
+    </nav>
+  </details>
+</header>
+
+<main class="app">
+  <ol class="progress" aria-label="Steps">
+    <li>Scan</li><li>Fast lane</li><li>Pay</li>
+  </ol>
+
+  <section data-view="welcome">
+    <div class="page-head">
+      <h1>Scan while you wait</h1>
+      <p>Scan your own basket in the queue, then pay at the fast lane.</p>
+    </div>
+    <div class="card flush">
+      <ul class="plain-list">
+        <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg><div><b>Scan each item</b><span>Point your camera at the barcode. Your total adds up as you go.</span></div></li>
+        <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#qr"/></svg><div><b>Go to the fast lane</b><span>Show the pass on your phone to the checker.</span></div></li>
+        <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#card"/></svg><div><b>Pay and leave</b><span>Cash, POS or transfer, the same as any till.</span></div></li>
+      </ul>
+    </div>
+    <div class="stack">
+      <button class="btn primary block" id="start" type="button"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Start scanning</button>
+      <p class="small muted center">Nothing to install. No account needed.</p>
+    </div>
+  </section>
+
+  <section data-view="shop" hidden>
+    <h1 class="sr-only">Scan your items</h1>
+    <div class="camera" id="cam">
+      <video data-cam="video" muted playsinline aria-label="Camera view"></video>
+      <div class="frame" data-cam="frame" hidden><i></i><b></b></div>
+      <button class="tool" data-cam="torch" type="button" aria-label="Torch" aria-pressed="false" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#torch"/></svg></button>
+      <div class="hint" data-cam="hint" hidden>Hold the barcode inside the frame</div>
+      <div class="idle" data-cam="idle">
+        <svg class="icon" aria-hidden="true"><use href="img/icons.svg#camera"/></svg>
+        <p>Your camera reads each barcode. Nothing is recorded.</p>
+        <button class="btn" data-cam="open" type="button">Open camera</button>
+      </div>
+    </div>
+    <div class="note warn" id="cam-note" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg><span></span></div>
+
+    <div class="field">
+      <label for="search">Cannot scan it? Find it by name or barcode number</label>
+      <div class="input-icon"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#search"/></svg><input type="search" id="search" autocomplete="off" placeholder="For example: rice"></div>
+      <div class="results" id="results"></div>
+    </div>
+
+    <div class="section-title"><h2>Your basket</h2><span class="chip neutral" id="basket-count">0 items</span></div>
+    <div class="card flush">
+      <div class="empty" id="empty"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg><b>Your basket is empty</b><span class="small">Scan your first item to begin.</span></div>
+      <ul class="lines" id="lines"></ul>
+    </div>
+    <p class="small muted">Items without a barcode, such as loose bread, are added by the checker.</p>
+  </section>
+
+  <section data-view="code" hidden>
+    <div class="page-head">
+      <h1>Show this at the fast lane</h1>
+      <p>The checker scans your pass, confirms your basket and takes payment.</p>
+    </div>
+    <div class="pass">
+      <div class="pass-head"><b>Fast-lane pass</b><span class="timer" id="code-timer"></span></div>
+      <div class="pass-qr" id="qr"></div>
+      <div class="pass-cut"></div>
+      <div class="pass-body">
+        <div class="kv"><span>Basket</span><b class="pass-id" id="code-id"></b></div>
+        <div class="kv"><span>Items</span><b id="code-units"></b></div>
+        <div class="kv total"><span>Total to pay</span><b id="code-total"></b></div>
+      </div>
+    </div>
+    <div class="note warn" id="expired" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#clock"/></svg><span>This pass has expired. Get a new one before you reach the checker.</span></div>
+    <button class="btn primary block" id="renew" type="button" hidden>Get a new pass</button>
+    <p class="small muted center">A pass works once. Turn your screen brightness up.</p>
+    <div class="row">
+      <button class="btn" id="edit" type="button">Change my basket</button>
+      <button class="btn" id="fresh" type="button">Start again</button>
+    </div>
+  </section>
+</main>
+
+<aside class="bar" id="bar" aria-label="Basket total" hidden>
+  <div class="bar-inner">
+    <div class="sum"><b id="total">₦0</b><span id="units">0 items</span></div>
+    <button class="btn primary" id="done" type="button" disabled>I am at the fast lane</button>
+  </div>
+</aside>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/shopper.js"></script>
+</body>
+</html>

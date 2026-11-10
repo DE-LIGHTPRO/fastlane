@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>Queue sign | FastLane</title>
+<meta name="description" content="A printable sign for the checkout queue that opens FastLane on a shopper phone.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="appbar">
+  <a class="logo" href="index.html" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+  <span class="chip">Setup</span>
+  <span class="spacer"></span>
+  <span class="chip neutral">Demo</span>
+  <details class="menu">
+    <summary aria-label="Switch view"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#grid"/></svg></summary>
+    <nav aria-label="Views">
+      <div class="group">Shopper</div>
+      <a href="scan.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Scan in store</a>
+      <a href="order.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg>Order ahead</a>
+      <div class="group">Staff</div>
+      <a href="checker.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg>Fast-lane checker</a>
+      <a href="pickup.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg>Pickup counter</a>
+      <div class="group">Setup</div>
+      <a href="products.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg>Products and barcodes</a>
+      <a href="poster.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Queue sign</a>
+      <a href="index.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg>About FastLane</a>
+    </nav>
+  </details>
+</header>
+
+<main class="app">
+  <div class="page-head no-print">
+    <h1>Queue sign</h1>
+    <p>Print this and stand it where the checkout queue forms. Shoppers scan it to start.</p>
+  </div>
+  <div class="note warn no-print" id="local-note" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg><span>This sign points at an address that only works on this computer. Open this page from your live site before printing.</span></div>
+  <div class="poster">
+    <div class="logo"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</div>
+    <h1>Skip this queue</h1>
+    <p class="lead">Scan your own basket while you wait, then pay at the fast lane.</p>
+    <div class="poster-qr" id="poster-qr"></div>
+    <ol>
+      <li>Scan this code with your phone camera</li>
+      <li>Scan each item in your basket</li>
+      <li>Show your pass at the fast lane and pay</li>
+    </ol>
+    <p class="url" id="poster-url"></p>
+  </div>
+  <div class="no-print center">
+    <button class="btn primary" id="print" type="button"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg>Print this sign</button>
+  </div>
+</main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/poster.js"></script>
+</body>
+</html>

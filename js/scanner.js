@@ -38,7 +38,8 @@ export function cameraProblem(err) {
 }
 
 // Starts the back camera in `video` and calls onCode(text) for each code seen.
-// Returns a stop() function.
+// Returns { stop, torch } where torch is null when the phone has no usable light,
+// or an async function torch(on) that switches it.
 export async function startCamera(video, onCode, formats) {
   if (!navigator.mediaDevices?.getUserMedia) throw new Error('no-camera-api');
   const detector = await createDetector(formats);
@@ -64,11 +65,27 @@ export async function startCamera(video, onCode, formats) {
   };
   tick();
 
-  return () => {
-    stopped = true;
-    clearTimeout(timer);
-    stream.getTracks().forEach((t) => t.stop());
-    video.srcObject = null;
+  const track = stream.getVideoTracks()[0];
+  let torch = null;
+  try {
+    if (track?.getCapabilities?.().torch) {
+      torch = async (on) => {
+        try {
+          await track.applyConstraints({ advanced: [{ torch: on }] });
+          return true;
+        } catch { return false; }
+      };
+    }
+  } catch { /* no torch on this device */ }
+
+  return {
+    torch,
+    stop() {
+      stopped = true;
+      clearTimeout(timer);
+      stream.getTracks().forEach((t) => t.stop());
+      video.srcObject = null;
+    },
   };
 }
 

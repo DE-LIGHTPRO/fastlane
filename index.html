@@ -3,78 +3,220 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b6a52">
-<title>FastLane: scan while you wait</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#001cdd">
+<title>FastLane: skip the checkout queue</title>
+<meta name="description" content="Shoppers scan their own basket while they wait, then pay at a fast lane. No app to install, no new hardware, and payment stays the way the store takes it today.">
+<meta property="og:title" content="FastLane: skip the checkout queue">
+<meta property="og:description" content="Shoppers scan their own basket while they wait, then pay at a fast lane.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<header class="top">
-  <div><div class="brand">Fast<span>Lane</span></div><div class="role">Scan in store</div></div>
-  <nav><a href="order.html">Order ahead</a><a href="checker.html">Checker</a><a href="pickup.html">Pickup</a><a href="products.html">Products</a></nav>
+<header class="site-head">
+  <div class="wrap">
+    <div class="site-nav">
+      <a class="logo" href="index.html" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+      <nav class="links" aria-label="Sections">
+        <a href="#how">How it works</a>
+        <a href="#stores">For stores</a>
+        <a href="#safeguards">Safeguards</a>
+        <a href="#demo">Demo</a>
+      </nav>
+      <a class="btn sm on-night primary" href="scan.html">Try the demo</a>
+    </div>
+
+    <div class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#store"/></svg>A concept for bokku! Mart</span>
+        <h1>Skip the checkout queue. Scan while you wait.</h1>
+        <p class="lead">Shoppers scan their own basket on their phone while they stand in line. At the fast lane, a checker confirms it with one scan and takes payment.</p>
+        <div class="actions">
+          <a class="btn on-night primary" href="scan.html"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg>Try it as a shopper</a>
+          <a class="btn on-night" href="#stores">See what a store needs</a>
+        </div>
+        <div class="foot">
+          <span><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg>No app to install</span>
+          <span><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg>No new hardware</span>
+          <span><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg>Cash, POS or transfer</span>
+        </div>
+      </div>
+      <div class="phone" aria-hidden="true">
+        <div class="p-bar"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane<span class="chip">Shopper</span></div>
+        <div class="p-cam"><em></em><i></i></div>
+        <div class="p-list">
+          <div><span>Long grain rice 5kg<small>1 at ₦9,800</small></span><span>₦9,800</span></div>
+          <div><span>Sliced bread, family loaf<small>2 at ₦1,600</small></span><span>₦3,200</span></div>
+          <div><span>Evaporated milk tin 160g<small>3 at ₦900</small></span><span>₦2,700</span></div>
+        </div>
+        <div class="p-total"><b>₦15,700</b><span>I am at the fast lane</span></div>
+      </div>
+    </div>
+  </div>
 </header>
 
 <main>
-  <section data-view="welcome">
-    <h1>Scan while you wait</h1>
-    <p class="muted">Scan your own basket in the queue, then pay at the fast lane.</p>
-    <ol class="steps">
-      <li><div><b>Scan each item</b><div class="small muted">Point your camera at the barcode. Your total adds up as you go.</div></div></li>
-      <li><div><b>Go to the fast lane</b><div class="small muted">Show the code on your phone to the checker.</div></div></li>
-      <li><div><b>Pay and leave</b><div class="small muted">Cash, POS or transfer. The checker confirms your basket and takes payment.</div></div></li>
-    </ol>
-    <button class="btn primary block" id="start">Start scanning</button>
-    <p class="small muted" style="margin-top:12px">Nothing to install. No account needed.</p>
-    <div class="card" style="margin-top:18px">
-      <b>Not in the store yet?</b>
-      <p class="small muted" style="margin:4px 0 10px">Reserve bread and essentials now and collect them at the pickup counter.</p>
-      <a class="btn block" href="order.html">Order ahead</a>
+  <section class="band" id="why">
+    <div class="wrap">
+      <div class="band-head">
+        <div class="kicker">The problem</div>
+        <h2>The queue is slow because every item is scanned at the till</h2>
+        <p>On a busy night a handful of cashiers scan every basket one item at a time, while a long line of shoppers stands idle. FastLane puts that waiting time to work.</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#users"/></svg></div><h3>Shoppers do the scanning</h3><p>The slow step moves off the till and into the queue, where people are already waiting with a phone in their hand.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg></div><h3>Cashiers check, not scan</h3><p>A fast-lane checker confirms a basket with one scan and a quick count, so each till serves far more people.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#card"/></svg></div><h3>Payment does not change</h3><p>Shoppers still pay a member of staff by cash, POS or transfer. Nobody has to trust a new payment app.</p></div>
+      </div>
     </div>
   </section>
 
-  <section data-view="shop" hidden>
-    <div class="camera">
-      <video id="video" muted playsinline></video>
-      <div class="aim" id="aim" hidden></div>
-      <div class="idle" id="cam-idle"><button class="btn" id="cam-on">Open camera</button></div>
+  <section class="band alt" id="how">
+    <div class="wrap">
+      <div class="band-head">
+        <div class="kicker">How it works</div>
+        <h2>Three steps for the shopper</h2>
+        <p>A sign at the queue carries a code. Scanning it opens FastLane in the phone browser.</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg></div><div class="step">Step 1</div><h3>Scan each item</h3><p>The phone camera reads each barcode and the total adds up. Items can also be found by name.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#qr"/></svg></div><div class="step">Step 2</div><h3>Show the pass</h3><p>One tap turns the basket into a pass. It works once and expires after 15 minutes.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#receipt"/></svg></div><div class="step">Step 3</div><h3>Pay at the fast lane</h3><p>The checker scans the pass, confirms the basket and takes payment the usual way.</p></div>
+      </div>
     </div>
-    <div class="note warn" id="cam-note" hidden></div>
-
-    <label for="search">Cannot scan it? Type the barcode number or the item name</label>
-    <input type="search" id="search" autocomplete="off" inputmode="search" placeholder="For example: rice">
-    <div class="results" id="results"></div>
-
-    <h2>Your basket</h2>
-    <div class="card">
-      <p class="muted small" id="empty">Nothing scanned yet.</p>
-      <ul class="lines" id="lines"></ul>
-    </div>
-    <p class="small muted" style="margin-top:12px">Items without a barcode, such as loose bread, are added by the checker.</p>
   </section>
 
-  <section data-view="code" hidden>
-    <h1>Show this at the fast lane</h1>
-    <p class="muted">The checker scans this code, confirms your basket and takes payment.</p>
-    <div class="qr" id="qr" aria-label="Your fast-lane code"></div>
-    <div class="card" style="margin-top:12px">
-      <div class="kv"><span>Basket</span><b id="code-id"></b></div>
-      <div class="kv"><span>Items</span><b id="code-units"></b></div>
-      <div class="kv"><span>Total to pay</span><b id="code-total"></b></div>
+  <section class="band" id="modes">
+    <div class="wrap">
+      <div class="band-head">
+        <div class="kicker">Two ways to skip the queue</div>
+        <h2>In the store, or before you arrive</h2>
+      </div>
+      <div class="grid-2">
+        <div class="feature">
+          <div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg></div>
+          <h3>Scan while you wait</h3>
+          <p>For shoppers already in the store with a full basket.</p>
+          <ul>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg>Works for the whole product range</li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg>Optional: the normal tills stay open</li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg>Every shopper who uses it shortens the line for the rest</li>
+          </ul>
+          <a class="btn" href="scan.html">Open the shopper view<svg class="icon" aria-hidden="true"><use href="img/icons.svg#arrow"/></svg></a>
+        </div>
+        <div class="feature">
+          <div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg></div>
+          <h3>Order ahead</h3>
+          <p>For bread and fast-selling essentials, reserved from home.</p>
+          <ul>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg>A short list, so packing takes moments</li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg>Half-hour pickup times that give staff time to pack</li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg>Collected at a counter with one scan</li>
+          </ul>
+          <a class="btn" href="order.html">Open order ahead<svg class="icon" aria-hidden="true"><use href="img/icons.svg#arrow"/></svg></a>
+        </div>
+      </div>
     </div>
-    <p class="small muted" style="margin-top:12px">This code works once and lasts 15 minutes. Keep your screen bright.</p>
-    <div class="row" style="margin-top:12px">
-      <button class="btn" id="edit">Change my basket</button>
-      <button class="btn" id="fresh">Start a new basket</button>
+  </section>
+
+  <section class="band alt" id="stores">
+    <div class="wrap">
+      <div class="band-head">
+        <div class="kicker">For stores</div>
+        <h2>A one-branch pilot needs very little</h2>
+        <p>FastLane is designed to sit beside the tills a store already runs, on the busiest nights of the week.</p>
+      </div>
+      <div class="grid-2">
+        <div class="feature">
+          <h3>What the store provides</h3>
+          <ul class="plain-list">
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg><div><b>The product list</b><span>Barcodes, names and prices, exported from the till system.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#store"/></svg><div><b>One or two fast lanes</b><span>Existing tills, switched over on weekend nights.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#phone"/></svg><div><b>A phone for each checker</b><span>Any recent Android phone or iPhone with a camera.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#signal"/></svg><div><b>Signal in the queue area</b><span>Shopper Wi-Fi helps where mobile data is weak.</span></div></li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3>What the store does not need</h3>
+          <ul class="plain-list">
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg><div><b>No new hardware</b><span>No kiosks, scales or smart trolleys.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg><div><b>No app for shoppers</b><span>It opens in the phone browser from a printed sign.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg><div><b>No change to how money is taken</b><span>Cash, POS and transfer go to the store exactly as they do now.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg><div><b>No extra tills</b><span>The checker works from a phone at an existing counter.</span></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="safeguards">
+    <div class="wrap">
+      <div class="band-head">
+        <div class="kicker">Safeguards</div>
+        <h2>Built on the assumption that some people will try to cheat</h2>
+        <p>Staff stay in the loop on every basket. The software tells them what to check.</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#shield"/></svg></div><h3>Prices come from the store</h3><p>A pass carries barcodes and quantities only. The checker prices the basket from the store list, so a shopper cannot change a price.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg></div><h3>Guided spot checks</h3><p>The checker must find up to three named items, always including the most expensive one, and count the basket.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg></div><h3>Big baskets get a full count</h3><p>Above 25 items the checker counts everything before the basket can be accepted.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#qr"/></svg></div><h3>A pass works once</h3><p>A pass that has been paid or rejected is refused if it is shown again, and every pass expires after 15 minutes.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#alert"/></svg></div><h3>Unknown items block the lane</h3><p>A barcode that is not on the store list sends the basket to a normal till.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#receipt"/></svg></div><h3>Everything is recorded</h3><p>Each basket, its items, the payment method and any rejection go into a sales file for reconciliation.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="demo">
+    <div class="wrap">
+      <div class="band-head">
+        <div class="kicker">Try the demo</div>
+        <h2>Walk through both sides</h2>
+        <p>Use a laptop for the barcode sheet and a phone for the shopper view. Products and prices in the demo are samples.</p>
+      </div>
+      <div class="tiles">
+        <a class="tile" href="scan.html"><span class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#scan"/></svg></span><span><b>Shopper: scan in store</b><span>Scan items and get a pass</span></span><svg class="icon" aria-hidden="true"><use href="img/icons.svg#chevron"/></svg></a>
+        <a class="tile" href="checker.html"><span class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#list"/></svg></span><span><b>Staff: fast-lane checker</b><span>Scan a pass and take payment</span></span><svg class="icon" aria-hidden="true"><use href="img/icons.svg#chevron"/></svg></a>
+        <a class="tile" href="order.html"><span class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#basket"/></svg></span><span><b>Shopper: order ahead</b><span>Reserve essentials for pickup</span></span><svg class="icon" aria-hidden="true"><use href="img/icons.svg#chevron"/></svg></a>
+        <a class="tile" href="pickup.html"><span class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#box"/></svg></span><span><b>Staff: pickup counter</b><span>Pack orders and hand them over</span></span><svg class="icon" aria-hidden="true"><use href="img/icons.svg#chevron"/></svg></a>
+        <a class="tile" href="products.html"><span class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#tag"/></svg></span><span><b>Products and barcodes</b><span>Sample sheet to scan from</span></span><svg class="icon" aria-hidden="true"><use href="img/icons.svg#chevron"/></svg></a>
+        <a class="tile" href="poster.html"><span class="badge"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#printer"/></svg></span><span><b>Queue sign</b><span>Printable sign for the line</span></span><svg class="icon" aria-hidden="true"><use href="img/icons.svg#chevron"/></svg></a>
+      </div>
+
+      <div class="grid-2" id="limits">
+        <div class="feature">
+          <h3>What this demo does not do yet</h3>
+          <ul class="plain-list limits">
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg><div><b>It runs without a server</b><span>A used pass is remembered on one checker phone. A pilot needs a shared server so every lane sees the same list.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg><div><b>Order-ahead payment is simulated</b><span>No money moves. A live version takes real payment before an order is confirmed.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg><div><b>It uses sample products</b><span>A pilot loads the store list and reports sales back to the till system.</span></div></li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3>A sensible first pilot</h3>
+          <ul class="plain-list">
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#store"/></svg><div><b>One branch, weekend nights</b><span>Run it where and when the queue is worst.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#clock"/></svg><div><b>Measure the wait</b><span>Time the queue before and during the pilot, and count how many shoppers choose the fast lane.</span></div></li>
+            <li><svg class="icon" aria-hidden="true"><use href="img/icons.svg#shield"/></svg><div><b>Audit the baskets</b><span>Fully re-scan a sample of fast-lane baskets each night to measure losses.</span></div></li>
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 </main>
 
-<div class="bar" id="bar" hidden>
-  <div class="bar-inner">
-    <div class="sum"><b id="total">₦0</b><span id="units">0 items</span></div>
-    <button class="btn primary" id="done" disabled>I am at the fast lane</button>
+<footer class="site-foot">
+  <div class="wrap">
+    <a class="logo" href="index.html"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
+    <span>Concept demo prepared for bokku! Mart. Independent work, not an official bokku! service. Sample products and prices.</span>
   </div>
-</div>
-<div id="toast" role="status" aria-live="polite"></div>
-<script type="module" src="js/shopper.js"></script>
+</footer>
+<script type="module" src="js/ui.js"></script>
 </body>
 </html>
