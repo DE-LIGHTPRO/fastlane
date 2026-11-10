@@ -1,0 +1,130 @@
+[
+  {
+    "barcode": "2000000001005",
+    "name": "Instant noodles, chicken 70g",
+    "price": 35000
+  },
+  {
+    "barcode": "2000000001074",
+    "name": "Instant noodles, pack of 40",
+    "price": 1350000,
+    "pickup": true
+  },
+  {
+    "barcode": "2000000001142",
+    "name": "Evaporated milk tin 160g",
+    "price": 90000,
+    "pickup": true
+  },
+  {
+    "barcode": "2000000001210",
+    "name": "Powdered milk sachet 350g",
+    "price": 420000
+  },
+  {
+    "barcode": "2000000001289",
+    "name": "Granulated sugar 1kg",
+    "price": 210000,
+    "pickup": true
+  },
+  {
+    "barcode": "2000000001357",
+    "name": "Long grain rice 5kg",
+    "price": 980000,
+    "pickup": true
+  },
+  {
+    "barcode": "2000000001425",
+    "name": "Spaghetti 500g",
+    "price": 115000
+  },
+  {
+    "barcode": "2000000001494",
+    "name": "Vegetable oil 3 litres",
+    "price": 890000
+  },
+  {
+    "barcode": "2000000001562",
+    "name": "Tomato paste sachet 70g",
+    "price": 25000
+  },
+  {
+    "barcode": "2000000001630",
+    "name": "Seasoning cubes, pack of 50",
+    "price": 140000
+  },
+  {
+    "barcode": "2000000001708",
+    "name": "Table salt 500g",
+    "price": 40000
+  },
+  {
+    "barcode": "2000000001777",
+    "name": "Sliced bread, family loaf",
+    "price": 160000,
+    "pickup": true
+  },
+  {
+    "barcode": "2000000001845",
+    "name": "Cornflakes 500g",
+    "price": 390000
+  },
+  {
+    "barcode": "2000000001913",
+    "name": "Chocolate drink 400g",
+    "price": 430000
+  },
+  {
+    "barcode": "2000000001982",
+    "name": "Tea bags, box of 50",
+    "price": 190000
+  },
+  {
+    "barcode": "2000000002057",
+    "name": "Bottled water 75cl",
+    "price": 25000,
+    "pickup": true
+  },
+  {
+    "barcode": "2000000002125",
+    "name": "Malt drink can 33cl",
+    "price": 70000
+  },
+  {
+    "barcode": "2000000002194",
+    "name": "Orange juice 1 litre",
+    "price": 240000
+  },
+  {
+    "barcode": "2000000002262",
+    "name": "Bar soap 150g",
+    "price": 65000
+  },
+  {
+    "barcode": "2000000002330",
+    "name": "Laundry detergent 900g",
+    "price": 290000,
+    "pickup": true
+  },
+  {
+    "barcode": "2000000002408",
+    "name": "Toothpaste 140g",
+    "price": 150000
+  },
+  {
+    "barcode": "2000000002477",
+    "name": "Toilet tissue, pack of 4",
+    "price": 220000,
+    "pickup": true
+  },
+  {
+    "barcode": "2000000002545",
+    "name": "Baby diapers, pack of 44",
+    "price": 1150000
+  },
+  {
+    "barcode": "2000000002613",
+    "name": "Body lotion 400ml",
+    "price": 360000
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "name": "fastlane",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Scan while you wait: shoppers scan their own basket in the queue, a checker verifies it and takes payment.",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "test": "node --test test/*.test.js",
+    "test:e2e": "node test-e2e/run.cjs",
+    "products": "node scripts/make-products.mjs",
+    "vendor": "esbuild node_modules/barcode-detector/dist/es/ponyfill.js --bundle --format=esm --minify --outfile=vendor/barcode-detector.js && cp node_modules/zxing-wasm/dist/reader/zxing_reader.wasm vendor/ && cp node_modules/qrcode-generator/dist/qrcode.mjs vendor/qrcode.js"
+  },
+  "devDependencies": {
+    "barcode-detector": "3.2.3",
+    "esbuild": "^0.28.0",
+    "qrcode-generator": "^2.0.0"
+  }
+}

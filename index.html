@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b6a52">
+<title>FastLane: scan while you wait</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="top">
+  <div><div class="brand">Fast<span>Lane</span></div><div class="role">Scan in store</div></div>
+  <nav><a href="order.html">Order ahead</a><a href="checker.html">Checker</a><a href="pickup.html">Pickup</a><a href="products.html">Products</a></nav>
+</header>
+
+<main>
+  <section data-view="welcome">
+    <h1>Scan while you wait</h1>
+    <p class="muted">Scan your own basket in the queue, then pay at the fast lane.</p>
+    <ol class="steps">
+      <li><div><b>Scan each item</b><div class="small muted">Point your camera at the barcode. Your total adds up as you go.</div></div></li>
+      <li><div><b>Go to the fast lane</b><div class="small muted">Show the code on your phone to the checker.</div></div></li>
+      <li><div><b>Pay and leave</b><div class="small muted">Cash, POS or transfer. The checker confirms your basket and takes payment.</div></div></li>
+    </ol>
+    <button class="btn primary block" id="start">Start scanning</button>
+    <p class="small muted" style="margin-top:12px">Nothing to install. No account needed.</p>
+    <div class="card" style="margin-top:18px">
+      <b>Not in the store yet?</b>
+      <p class="small muted" style="margin:4px 0 10px">Reserve bread and essentials now and collect them at the pickup counter.</p>
+      <a class="btn block" href="order.html">Order ahead</a>
+    </div>
+  </section>
+
+  <section data-view="shop" hidden>
+    <div class="camera">
+      <video id="video" muted playsinline></video>
+      <div class="aim" id="aim" hidden></div>
+      <div class="idle" id="cam-idle"><button class="btn" id="cam-on">Open camera</button></div>
+    </div>
+    <div class="note warn" id="cam-note" hidden></div>
+
+    <label for="search">Cannot scan it? Type the barcode number or the item name</label>
+    <input type="search" id="search" autocomplete="off" inputmode="search" placeholder="For example: rice">
+    <div class="results" id="results"></div>
+
+    <h2>Your basket</h2>
+    <div class="card">
+      <p class="muted small" id="empty">Nothing scanned yet.</p>
+      <ul class="lines" id="lines"></ul>
+    </div>
+    <p class="small muted" style="margin-top:12px">Items without a barcode, such as loose bread, are added by the checker.</p>
+  </section>
+
+  <section data-view="code" hidden>
+    <h1>Show this at the fast lane</h1>
+    <p class="muted">The checker scans this code, confirms your basket and takes payment.</p>
+    <div class="qr" id="qr" aria-label="Your fast-lane code"></div>
+    <div class="card" style="margin-top:12px">
+      <div class="kv"><span>Basket</span><b id="code-id"></b></div>
+      <div class="kv"><span>Items</span><b id="code-units"></b></div>
+      <div class="kv"><span>Total to pay</span><b id="code-total"></b></div>
+    </div>
+    <p class="small muted" style="margin-top:12px">This code works once and lasts 15 minutes. Keep your screen bright.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="edit">Change my basket</button>
+      <button class="btn" id="fresh">Start a new basket</button>
+    </div>
+  </section>
+</main>
+
+<div class="bar" id="bar" hidden>
+  <div class="bar-inner">
+    <div class="sum"><b id="total">₦0</b><span id="units">0 items</span></div>
+    <button class="btn primary" id="done" disabled>I am at the fast lane</button>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/shopper.js"></script>
+</body>
+</html>

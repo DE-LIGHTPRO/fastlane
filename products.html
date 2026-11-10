@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FastLane products</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="top">
+  <div><div class="brand">Fast<span>Lane</span></div><div class="role">Products</div></div>
+  <nav><a href="index.html">Scan in store</a><a href="order.html">Order ahead</a><a href="checker.html">Checker</a><a href="pickup.html">Pickup</a></nav>
+</header>
+<main style="max-width:1100px">
+  <div class="no-print">
+    <h1>Products</h1>
+    <p class="muted">Sample items with made-up prices, for the demo only. Open this page on a laptop and scan the barcodes below with the shopper page on a phone.</p>
+
+    <h2>Add a real product</h2>
+    <div class="card" style="max-width:560px">
+      <p class="small muted">Scan any real item so it works in the demo. It is saved on this device only, so add it on the phone that plays the shopper and the phone that plays the checker.</p>
+      <div class="camera" id="cam-box" hidden>
+        <video id="video" muted playsinline></video>
+        <div class="aim"></div>
+      </div>
+      <div class="note warn" id="cam-note" hidden></div>
+      <button class="btn block" id="cam-on">Scan a barcode</button>
+      <form id="add">
+        <label for="f-barcode">Barcode number</label>
+        <input type="text" id="f-barcode" inputmode="numeric" pattern="\d{6,14}" required autocomplete="off">
+        <label for="f-name">Item name</label>
+        <input type="text" id="f-name" maxlength="60" required autocomplete="off">
+        <label for="f-price">Price in naira</label>
+        <input type="number" id="f-price" min="1" max="10000000" step="1" required inputmode="numeric">
+        <button class="btn primary block" style="margin-top:14px">Save product</button>
+      </form>
+      <ul class="lines" id="mine" style="margin-top:10px"></ul>
+    </div>
+
+    <h2>Sample barcode sheet</h2>
+    <p><button class="btn" id="print">Print this sheet</button></p>
+  </div>
+  <div class="sheet" id="sheet"></div>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/products.js"></script>
+</body>
+</html>

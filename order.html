@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b6a52">
+<title>FastLane: order ahead</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="top">
+  <div><div class="brand">Fast<span>Lane</span></div><div class="role">Order ahead</div></div>
+  <nav><a href="index.html">Scan in store</a><a href="checker.html">Checker</a><a href="pickup.html">Pickup</a><a href="products.html">Products</a></nav>
+</header>
+
+<main>
+  <section data-view="browse">
+    <h1>Order ahead, collect at the counter</h1>
+    <p class="muted">Reserve your essentials now. Staff pack them and you collect at the pickup counter, with no queue.</p>
+    <div class="card">
+      <ul class="lines" id="list"></ul>
+    </div>
+    <p class="small muted" style="margin-top:12px">Up to 5 of each item per order. For anything else, shop in store and use the fast lane.</p>
+  </section>
+
+  <section data-view="time" hidden>
+    <h1>When will you collect?</h1>
+    <div class="slots" id="slots"></div>
+    <h2>Your order</h2>
+    <div class="card">
+      <ul class="lines" id="summary"></ul>
+      <div class="kv" style="margin-top:6px"><span>Total</span><b id="t-total"></b></div>
+    </div>
+    <div class="note warn">Demo payment. No money is taken. In a live store this step pays the store by card or transfer.</div>
+    <button class="btn primary block" id="pay" disabled>Pay</button>
+    <button class="btn block" id="back" style="margin-top:8px">Change my order</button>
+  </section>
+
+  <section data-view="code" hidden>
+    <h1>Order paid</h1>
+    <p class="muted">Show this code at the pickup counter.</p>
+    <div class="qr" id="qr" aria-label="Your pickup code"></div>
+    <div class="card" style="margin-top:12px">
+      <div class="kv"><span>Order</span><b id="c-id"></b></div>
+      <div class="kv"><span>Collect</span><b id="c-slot"></b></div>
+      <div class="kv"><span>Paid</span><b id="c-total"></b></div>
+    </div>
+    <div class="card">
+      <ul class="lines" id="c-lines"></ul>
+    </div>
+    <button class="btn block" id="again" style="margin-top:12px">Place another order</button>
+  </section>
+</main>
+
+<div class="bar" id="bar" hidden>
+  <div class="bar-inner">
+    <div class="sum"><b id="total">₦0</b><span id="units">0 items</span></div>
+    <button class="btn primary" id="next" disabled>Choose pickup time</button>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/order.js"></script>
+</body>
+</html>

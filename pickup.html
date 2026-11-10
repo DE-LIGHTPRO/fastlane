@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b6a52">
+<title>FastLane pickup counter</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="top">
+  <div><div class="brand">Fast<span>Lane</span></div><div class="role">Pickup counter</div></div>
+  <nav><a href="index.html">Scan in store</a><a href="order.html">Order ahead</a><a href="checker.html">Checker</a><a href="products.html">Products</a></nav>
+</header>
+
+<main>
+  <section data-view="board">
+    <h1>Pickup orders</h1>
+
+    <h2>Hand over an order</h2>
+    <div class="card">
+      <div class="camera" id="cam-box" hidden>
+        <video id="video" muted playsinline></video>
+        <div class="aim square"></div>
+      </div>
+      <div class="note warn" id="cam-note" hidden></div>
+      <button class="btn block" id="cam-on">Scan the shopper's code</button>
+      <label for="find-id">Or type the order number, or paste the code text</label>
+      <input type="text" id="find-id" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="For example: KM4T7Q">
+      <button class="btn block" id="find" style="margin-top:8px">Find order</button>
+      <div class="note bad" id="find-error" hidden></div>
+    </div>
+
+    <h2>To pack <span class="muted" id="n-pack"></span></h2>
+    <p class="muted small" id="none-pack">No orders waiting.</p>
+    <div id="to-pack"></div>
+
+    <h2>Packed and waiting <span class="muted" id="n-ready"></span></h2>
+    <p class="muted small" id="none-ready">Nothing on the shelf.</p>
+    <div id="ready"></div>
+
+    <p class="small muted" style="margin-top:18px">Collected today: <b id="n-done">0</b></p>
+    <p class="small muted">Demo: orders placed on another phone appear here when the shopper's code is scanned. A live store sends them here the moment they are paid.</p>
+  </section>
+
+  <section data-view="handover" hidden>
+    <h1>Hand over</h1>
+    <div class="card">
+      <div class="kv"><span>Order</span><b id="h-id"></b></div>
+      <div class="kv"><span>Collect</span><b id="h-slot"></b></div>
+      <div class="kv"><span>Paid</span><b id="h-total"></b></div>
+    </div>
+    <div class="note warn" id="h-note" hidden></div>
+    <div class="card">
+      <ul class="lines" id="h-lines"></ul>
+    </div>
+    <button class="btn primary block" id="h-done" style="margin-top:14px">Handed to the shopper</button>
+    <button class="btn block" id="h-back" style="margin-top:8px">Back</button>
+  </section>
+
+  <section data-view="done" hidden>
+    <div class="tick" aria-hidden="true">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </div>
+    <h1 class="center">Collected</h1>
+    <p class="center muted" id="d-text"></p>
+    <button class="btn primary block" id="d-next">Next order</button>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/pickup.js"></script>
+</body>
+</html>
