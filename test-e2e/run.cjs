@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 
 const PORT = 4199;
 const BASE = `http://localhost:${PORT}`;
-const PAGES = ['index.html', 'scan.html', 'order.html', 'checker.html', 'assist.html', 'pickup.html', 'products.html', 'poster.html', 'proposal.html', 'privacy.html'];
+const PAGES = ['', 'scan', 'order', 'checker', 'assist', 'pickup', 'products', 'poster', 'proposal', 'privacy'];
 const products = JSON.parse(readFileSync(join(__dirname, '..', 'data', 'products.json'), 'utf8'));
 const byName = (part) => products.find((p) => p.name.includes(part));
 const noodles = products[0];
@@ -99,15 +99,29 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       watch(page, errors);
       await page.goto(BASE + '/');
       await page.getByRole('heading', { level: 1 }).waitFor();
-      const hrefs = await page.locator('a[href$=".html"]').evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute('href')))]);
-      for (const name of PAGES) assert.ok(hrefs.includes(name), name);
+      const hrefs = await page.locator('a[href]').evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute('href')))]);
+      for (const name of PAGES.slice(1)) assert.ok(hrefs.includes(name), name);
+      assert.ok(hrefs.every((h) => !h.endsWith('.html')), 'no address ends in .html');
+
+      // Section links scroll without changing the address.
+      await page.getByRole('link', { name: 'For stores' }).click();
+      await page.waitForFunction(() => document.querySelector('#stores').getBoundingClientRect().top < 200);
+      assert.equal(page.url(), BASE + '/');
+      // An old link with #stores still lands on the section, then cleans itself up.
+      await page.goto(BASE + '/#safeguards');
+      await page.waitForFunction(() => !location.hash);
+      assert.equal(page.url(), BASE + '/');
+
+      // Old .html addresses still work: they redirect to the clean ones.
+      await page.goto(BASE + '/scan.html');
+      assert.equal(page.url(), BASE + '/scan');
       await page.close();
     });
 
     await step('an unknown address shows the not-found page', async () => {
       const page = await plain.newPage();
       watch(page, []); // a 404 logs a console error by design
-      const res = await page.goto(BASE + '/nope/missing.html');
+      const res = await page.goto(BASE + '/nope/missing');
       assert.equal(res.status(), 404);
       await page.getByRole('heading', { name: 'This page does not exist' }).waitFor();
       await page.close();
@@ -128,7 +142,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     // ---- 2. Barcode sheet, and a camera clip of one barcode
     const sheet = await plain.newPage({ viewport: { width: 1280, height: 900 } });
     watch(sheet, errors);
-    await sheet.goto(BASE + '/products.html');
+    await sheet.goto(BASE + '/products');
     await sheet.waitForSelector(`#sheet [data-barcode="${noodles.barcode}"] svg`);
 
     await step('the sheet shows a barcode for every sample product', async () => {
@@ -145,9 +159,9 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     await step('the queue sign carries a code that opens the shopper page', async () => {
       const page = await plain.newPage();
       watch(page, errors);
-      await page.goto(BASE + '/poster.html');
+      await page.goto(BASE + '/poster');
       const png = await page.locator('#poster-qr svg').screenshot();
-      assert.deepEqual(await scanPng(page, png, 'QR_FORMATS'), [BASE + '/scan.html']);
+      assert.deepEqual(await scanPng(page, png, 'QR_FORMATS'), [BASE + '/scan']);
       assert.ok(await page.locator('#local-note').isVisible());
       await page.close();
     });
@@ -158,7 +172,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     const shopCtx = await shopBrowser.newContext({ viewport: phone, permissions: ['camera'] });
     const shop = await shopCtx.newPage();
     watch(shop, errors);
-    await shop.goto(BASE + '/scan.html');
+    await shop.goto(BASE + '/scan');
 
     await step('the welcome screen explains the three steps', async () => {
       await shop.getByRole('heading', { name: 'Scan while you wait' }).waitFor();
@@ -228,7 +242,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await ctx.clock.install({ time: new Date(2026, 10, 14, 20, 0) });
       const page = await ctx.newPage();
       watch(page, errors);
-      await page.goto(BASE + '/scan.html');
+      await page.goto(BASE + '/scan');
       await page.getByRole('button', { name: 'Start scanning' }).click();
       await page.locator('#search').fill('rice');
       await page.locator('#results button').first().click();
@@ -246,7 +260,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     await step('starting again asks first, then clears the basket', async () => {
       const page = await plain.newPage({ viewport: phone });
       watch(page, errors);
-      await page.goto(BASE + '/scan.html');
+      await page.goto(BASE + '/scan');
       await page.getByRole('button', { name: 'Start scanning' }).click();
       await page.locator('#search').fill('rice');
       await page.locator('#results button').first().click();
@@ -266,7 +280,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     const checkCtx = await checkBrowser.newContext({ viewport: phone, permissions: ['camera'] });
     const check = await checkCtx.newPage();
     watch(check, errors);
-    await check.goto(BASE + '/checker.html');
+    await check.goto(BASE + '/checker');
 
     await step('the checker camera reads the pass and shows the priced basket', async () => {
       await check.getByRole('button', { name: 'Open camera' }).click();
@@ -401,7 +415,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     await step('a product added on this device can be found by the shopper', async () => {
       const page = await shopCtx.newPage();
       watch(page, errors);
-      await page.goto(BASE + '/products.html');
+      await page.goto(BASE + '/products');
       await page.getByRole('button', { name: 'Save product' }).click();
       await page.getByText('The barcode must be 6 to 14 digits.').waitFor();
       await page.locator('#f-barcode').fill('6151234567890');
@@ -409,7 +423,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await page.locator('#f-price').fill('500');
       await page.getByRole('button', { name: 'Save product' }).click();
       await page.locator('#mine li[data-barcode="6151234567890"]').waitFor();
-      await page.goto(BASE + '/scan.html');
+      await page.goto(BASE + '/scan');
       await page.getByRole('button', { name: 'Change my basket' }).click();
       await page.locator('#search').fill('biscuit');
       await page.locator('#results button[data-barcode="6151234567890"]').click();
@@ -425,7 +439,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     await orderCtx.clock.install({ time: saturdayEvening });
     const order = await orderCtx.newPage();
     watch(order, errors);
-    await order.goto(BASE + '/order.html');
+    await order.goto(BASE + '/order');
     let orderId = '';
     let orderText = '';
     const orderTotal = bread.price * 2 + water.price;
@@ -476,7 +490,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
 
     const counter = await orderCtx.newPage();
     watch(counter, errors);
-    await counter.goto(BASE + '/pickup.html');
+    await counter.goto(BASE + '/pickup');
 
     await step('the order appears on the staff packing list and can be marked packed', async () => {
       const card = counter.locator(`#to-pack [data-order="${orderId}"]`);
@@ -512,7 +526,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     await otherCtx.clock.install({ time: saturdayEvening });
     const other = await otherCtx.newPage();
     watch(other, errors);
-    await other.goto(BASE + '/pickup.html');
+    await other.goto(BASE + '/pickup');
     const find = async (text) => {
       await other.locator('#find-id').fill(text);
       await other.getByRole('button', { name: 'Find order' }).click();
@@ -547,7 +561,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     const paidAt = Date.now();
     const receiptText = `FR1/ABCDEF/${paidAt}/${rice.price * 2 + loaf.price}/3/CASH`;
     const maker = await plain.newPage();
-    await maker.goto(BASE + '/poster.html');
+    await maker.goto(BASE + '/poster');
     await maker.evaluate(async (text) => {
       const { default: qrcode } = await import('/vendor/qrcode.js');
       const { qrSvg } = await import('/js/ui.js');
@@ -569,7 +583,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await ctx.addInitScript(seedOnce, seedBasket('ZZZZZZ'));
       const page = await ctx.newPage();
       watch(page, errors);
-      await page.goto(BASE + '/scan.html');
+      await page.goto(BASE + '/scan');
       await page.getByRole('button', { name: /I have paid/ }).click();
       await page.locator('#claim-error:not([hidden])').waitFor({ timeout: 20000 });
       assert.match(await page.locator('#claim-error').textContent(), /for basket ABCDEF\. Yours is ZZZZZZ/);
@@ -581,7 +595,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await ctx.addInitScript(seedOnce, seedBasket('ABCDEF'));
       const page = await ctx.newPage();
       watch(page, errors);
-      await page.goto(BASE + '/scan.html');
+      await page.goto(BASE + '/scan');
       assert.equal(await page.locator('#code-id').textContent(), 'ABCDEF');
       await page.getByRole('button', { name: /I have paid/ }).click();
       await page.getByRole('heading', { name: 'Paid' }).waitFor({ timeout: 20000 });
@@ -602,7 +616,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       const ctx = await plain.newContext({ viewport: phone });
       const page = await ctx.newPage();
       watch(page, errors);
-      await page.goto(BASE + '/assist.html');
+      await page.goto(BASE + '/assist');
       assert.ok(await page.getByRole('button', { name: 'Take payment' }).isDisabled());
       await page.locator('#search').fill('rice');
       await page.locator('#results button').first().click();
@@ -620,7 +634,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await page.getByRole('button', { name: 'Next shopper' }).click();
       await page.getByText('Nothing scanned yet').waitFor();
       // The same device's shift summary on the checker page includes it.
-      await page.goto(BASE + '/checker.html');
+      await page.goto(BASE + '/checker');
       assert.equal(await page.locator('#sum-count').textContent(), '1');
       assert.equal(await page.locator('#sum-cash').textContent(), naira(total));
       const lanes = await page.evaluate(() => JSON.parse(localStorage.getItem('fastlane.sales')).map((s) => s.lane));
@@ -640,10 +654,10 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await page.goto(BASE + '/');
       await page.waitForLoadState('networkidle');
       assert.ok(await page.locator('#contact').isHidden());
-      await page.goto(BASE + '/proposal.html');
+      await page.goto(BASE + '/proposal');
       await page.getByRole('heading', { level: 1 }).waitFor();
       assert.ok(await page.locator('#doc-contact').isHidden());
-      assert.equal(await page.locator('#doc-url').textContent(), `localhost:${PORT}/`);
+      assert.equal(await page.locator('#doc-url').textContent(), `localhost:${PORT}`);
       await emptyCtx.close();
 
       const ctx = await plain.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
@@ -658,7 +672,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       assert.equal(await filled.locator('#contact-who').textContent(), 'Test Person, Founder');
       assert.equal(await filled.locator('#contact a[href^="mailto:"]').getAttribute('href'), 'mailto:hello%40example.com');
       assert.equal(await filled.locator('#contact a[href^="tel:"]').getAttribute('href'), 'tel:+2348000000000');
-      await filled.goto(BASE + '/proposal.html');
+      await filled.goto(BASE + '/proposal');
       assert.match(await filled.locator('#doc-contact-text').textContent(), /Test Person · Founder · hello@example\.com/);
       await ctx.close();
     });
@@ -667,16 +681,16 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
     await step('pages keep working with no network after the first visit', async () => {
       const ctx = await plain.newContext({ viewport: phone });
       const page = await ctx.newPage();
-      await page.goto(BASE + '/scan.html');
+      await page.goto(BASE + '/scan');
       await page.evaluate(() => navigator.serviceWorker.ready);
       await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
       await ctx.setOffline(true);
-      await page.goto(BASE + '/scan.html');
+      await page.goto(BASE + '/scan');
       await page.getByRole('button', { name: 'Start scanning' }).click();
       await page.locator('#search').fill('bread');
       await page.locator('#results button').first().click();
       await page.locator('#lines li').waitFor();
-      await page.goto(BASE + '/checker.html');
+      await page.goto(BASE + '/checker');
       await page.getByRole('heading', { name: 'Scan the shopper\'s pass' }).waitFor();
       await ctx.close();
     });
@@ -686,10 +700,10 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       const fresh = Date.now();
       // Screens that only appear part-way through a flow, reached by seeding the browser's storage.
       const seeded = {
-        'scan.html#shop': { 'fastlane.basket': { id: '', ts: 0, items: [{ barcode: rice.barcode, qty: 2 }], locked: false, started: true } },
-        'scan.html#pass': { 'fastlane.basket': { id: 'ABCDEF', ts: fresh, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true } },
-        'scan.html#receipt': { 'fastlane.basket': { id: 'ABCDEF', ts: fresh, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true, paid: { at: fresh, total: rice.price * 2, units: 2, method: 'cash' } } },
-        'pickup.html#orders': { 'fastlane.orders': [{ id: 'KM4T7Q', ts: fresh, slot: fresh, items: [{ barcode: bread.barcode, qty: 2 }], total: bread.price * 2, units: 2, status: 'paid' }] },
+        'scan#shop': { 'fastlane.basket': { id: '', ts: 0, items: [{ barcode: rice.barcode, qty: 2 }], locked: false, started: true } },
+        'scan#pass': { 'fastlane.basket': { id: 'ABCDEF', ts: fresh, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true } },
+        'scan#receipt': { 'fastlane.basket': { id: 'ABCDEF', ts: fresh, items: [{ barcode: rice.barcode, qty: 2 }], locked: true, started: true, paid: { at: fresh, total: rice.price * 2, units: 2, method: 'cash' } } },
+        'pickup#orders': { 'fastlane.orders': [{ id: 'KM4T7Q', ts: fresh, slot: fresh, items: [{ barcode: bread.barcode, qty: 2 }], total: bread.price * 2, units: 2, status: 'paid' }] },
       };
       for (const colorScheme of ['light', 'dark']) {
         for (const target of [...PAGES, ...Object.keys(seeded)]) {

@@ -660,3 +660,6 @@ dialog.dialog p { margin-top: 8px; color: var(--muted); }
 .float-paid { top: 7%; right: -4px; }
 .float-pass { top: 31%; left: -4px; }
 .phone .p-bar .chip { display: none; }
+
+/* Sections reached from the menu take focus for keyboard users, without a visible ring. */
+main section[tabindex="-1"]:focus { outline: none; }

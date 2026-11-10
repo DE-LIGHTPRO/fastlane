@@ -22,7 +22,13 @@ for (const h of JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8')).head
 
 createServer(async (req, res) => {
   let path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  // Mirror Vercel's cleanUrls: /scan.html redirects to /scan, and /scan serves scan.html.
+  if (path.endsWith('.html') && path !== '/404.html') {
+    res.writeHead(308, { location: path === '/index.html' ? '/' : path.slice(0, -5) }).end();
+    return;
+  }
   if (path.endsWith('/')) path += 'index.html';
+  else if (!extname(path)) path += '.html';
   const file = normalize(join(root, path));
   const hidden = path.split('/').some((part) => part.startsWith('.') || part === 'node_modules');
   const headers = { ...security, 'cache-control': 'no-store' };

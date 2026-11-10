@@ -2,7 +2,7 @@
   "name": "FastLane",
   "short_name": "FastLane",
   "description": "Scan your own basket while you wait, then pay at the fast lane.",
-  "start_url": "scan.html",
+  "start_url": "scan",
   "scope": "./",
   "display": "standalone",
   "background_color": "#001cdd",

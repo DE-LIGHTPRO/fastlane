@@ -39,6 +39,8 @@ To demo with real products, use **Add a real product** on `products.html`. Added
 
 ## Pages
 
+Addresses are clean: `scan.html` is served at `/scan`, `proposal.html` at `/proposal`, and so on (`cleanUrls` in `vercel.json`; the local server does the same). Old `.html` links redirect. Section links on the landing page scroll without adding `#section` to the address.
+
 | Page | Who uses it | What it does |
 |---|---|---|
 | `index.html` | Anyone | What FastLane is, what a store needs, the safeguards, links into the demo |

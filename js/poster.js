@@ -2,7 +2,7 @@ import qrcode from '../vendor/qrcode.js';
 import { $, qrSvg } from './ui.js';
 
 // The sign points shoppers at the scan page of whichever site this page is opened from.
-const target = new URL('scan.html', location.href).href;
+const target = new URL('scan', location.href).href;
 const qr = qrcode(0, 'M');
 qr.addData(target);
 qr.make();

@@ -11,3 +11,28 @@ if (CONTACT.email || CONTACT.phone) {
   $('#contact-actions').innerHTML = actions.join('');
   $('#contact').hidden = false;
 }
+
+// Section links scroll the page without adding "#section" to the address,
+// so the address a visitor copies or shares is always the clean one.
+function goTo(id) {
+  const target = document.getElementById(id);
+  if (!target) return false;
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  target.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+  target.setAttribute('tabindex', '-1');
+  target.focus({ preventScroll: true });
+  return true;
+}
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a[href^="#"]');
+  if (link && goTo(link.getAttribute('href').slice(1))) e.preventDefault();
+});
+// An address that arrives with "#section" (an old link, or one typed by hand) still lands on
+// the section, then the "#section" is removed.
+function tidyHash() {
+  if (!location.hash) return;
+  goTo(location.hash.slice(1));
+  history.replaceState(null, '', location.pathname + location.search);
+}
+window.addEventListener('hashchange', tidyHash);
+tidyHash();

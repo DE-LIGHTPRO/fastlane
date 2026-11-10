@@ -1,9 +1,8 @@
 // Offline support. Store networks are patchy, so once a page has loaded it must keep working.
 // Strategy: always try the network first (so updates show at once), fall back to the cache.
-const CACHE = 'fastlane-v5';
+const CACHE = 'fastlane-v6';
 const SHELL = [
-  './', 'index.html', 'scan.html', 'order.html', 'checker.html', 'assist.html', 'pickup.html', 'products.html', 'poster.html',
-  'proposal.html', 'privacy.html',
+  './', 'scan', 'order', 'checker', 'assist', 'pickup', 'products', 'poster', 'proposal', 'privacy',
   'css/app.css', 'data/products.json', 'img/icons.svg', 'img/favicon.svg', 'manifest.webmanifest',
   'js/assist.js', 'js/basket.js', 'js/camera-panel.js', 'js/catalogue.js', 'js/checker.js', 'js/config.js', 'js/ean13.js', 'js/landing.js',
   'js/order.js', 'js/orders.js', 'js/proposal.js', 'js/sales.js',
