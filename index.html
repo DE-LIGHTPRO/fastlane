@@ -26,6 +26,7 @@
       <a class="logo" href="./" aria-label="FastLane home"><svg class="mark" aria-hidden="true"><use href="img/icons.svg#mark"/></svg>FastLane</a>
       <nav class="links" aria-label="Sections">
         <a href="#how">How it works</a>
+        <a href="#tour">Screens</a>
         <a href="#stores">For stores</a>
         <a href="#safeguards">Safeguards</a>
         <a href="#demo">Demo</a>
@@ -57,7 +58,7 @@
             <div><span>Sliced bread, family loaf<small>2 at ₦1,600</small></span><span>₦3,200</span></div>
             <div><span>Evaporated milk tin 160g<small>3 at ₦900</small></span><span>₦2,700</span></div>
           </div>
-          <div class="p-total"><b>₦15,700</b><span>I am at the fast lane</span></div>
+          <div class="p-total"><b id="hero-total">₦15,700</b><span>I am at the fast lane</span></div>
         </div>
         <div class="float float-paid"><div class="ok"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg></div><div><b>Paid ₦15,700</b><span>POS, 8:42 PM</span></div></div>
         <div class="float float-pass"><img src="img/qr-demo.svg" alt="" width="46" height="46"><div><b>Fast-lane pass</b><span>Valid for 14:32</span></div></div>
@@ -117,6 +118,66 @@
         <div class="step-card"><div class="step-art" aria-hidden="true"><div class="art-scan"><em></em><i></i></div></div><div class="step-body"><h3>Scan each item</h3><p>The phone camera reads each barcode and the total adds up. Items can also be found by name.</p></div></div>
         <div class="step-card"><div class="step-art" aria-hidden="true"><div class="art-pass"><img src="img/qr-demo.svg" alt="" width="84" height="84"><div><b>Fast-lane pass</b><span>Valid for 14:32</span><code>K7M4TQ</code></div></div></div><div class="step-body"><h3>Show the pass</h3><p>One tap turns the basket into a pass. It works once and expires after 15 minutes.</p></div></div>
         <div class="step-card"><div class="step-art" aria-hidden="true"><div class="art-paid"><div class="ok"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#check"/></svg></div><b>Paid ₦15,700</b><span>Receipt on your phone</span></div></div><div class="step-body"><h3>Pay at the fast lane</h3><p>The checker scans the pass, confirms the basket and takes payment the usual way. The shopper gets a receipt on their phone for the door.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="tour">
+    <div class="wrap">
+      <div class="band-head">
+        <div class="kicker">See it</div>
+        <h2>Every screen, from basket to receipt</h2>
+        <p>These are the real screens from the working demo, not mock-ups.</p>
+      </div>
+      <div class="tour" id="tour-root">
+        <div class="tour-tabs" role="tablist" aria-label="Screens">
+          <button class="tour-tab" type="button" role="tab" id="tour-tab-0" aria-selected="true" aria-controls="tour-panel" tabindex="0" data-img="img/tour/scan.jpg" data-alt="The shopper screen: a camera view reading a barcode, above a basket of three items totalling 15,700 naira.">
+            <span class="tour-n">01</span>
+            <span class="tour-text"><b>Scan the basket</b><span>The shopper scans each barcode with their own phone. The total adds up as they go.</span></span>
+            <i class="tour-bar" aria-hidden="true"></i>
+          </button>
+          <button class="tour-tab" type="button" role="tab" id="tour-tab-1" aria-selected="false" aria-controls="tour-panel" tabindex="-1" data-img="img/tour/pass.jpg" data-alt="The fast-lane pass: a large code, the basket number, six items and the total to pay.">
+            <span class="tour-n">02</span>
+            <span class="tour-text"><b>Show the pass</b><span>One tap makes a pass with a countdown. It works once.</span></span>
+            <i class="tour-bar" aria-hidden="true"></i>
+          </button>
+          <button class="tour-tab" type="button" role="tab" id="tour-tab-2" aria-selected="false" aria-controls="tour-panel" tabindex="-1" data-img="img/tour/check.jpg" data-alt="The checker screen: the basket total and a list of items, three marked to check.">
+            <span class="tour-n">03</span>
+            <span class="tour-text"><b>Check the basket</b><span>The checker is told which items to find, and counts the basket.</span></span>
+            <i class="tour-bar" aria-hidden="true"></i>
+          </button>
+          <button class="tour-tab" type="button" role="tab" id="tour-tab-3" aria-selected="false" aria-controls="tour-panel" tabindex="-1" data-img="img/tour/pay.jpg" data-alt="The checker payment screen: 15,700 naira, with Cash, POS and Transfer buttons.">
+            <span class="tour-n">04</span>
+            <span class="tour-text"><b>Take payment</b><span>Cash, POS or transfer, the way the store takes it today.</span></span>
+            <i class="tour-bar" aria-hidden="true"></i>
+          </button>
+          <button class="tour-tab" type="button" role="tab" id="tour-tab-4" aria-selected="false" aria-controls="tour-panel" tabindex="-1" data-img="img/tour/receipt.jpg" data-alt="The shopper receipt: a tick, Paid, the basket number, payment method, time and items.">
+            <span class="tour-n">05</span>
+            <span class="tour-text"><b>Receipt for the door</b><span>The shopper's pass becomes a paid receipt.</span></span>
+            <i class="tour-bar" aria-hidden="true"></i>
+          </button>
+          <button class="tour-tab" type="button" role="tab" id="tour-tab-5" aria-selected="false" aria-controls="tour-panel" tabindex="-1" data-img="img/tour/order.jpg" data-alt="The order-ahead payment screen: 4,850 naira, with Card and Bank transfer buttons.">
+            <span class="tour-n">06</span>
+            <span class="tour-text"><b>Order ahead and pay</b><span>Essentials reserved from home, paid by card or bank transfer.</span></span>
+            <i class="tour-bar" aria-hidden="true"></i>
+          </button>
+          <button class="tour-tab" type="button" role="tab" id="tour-tab-6" aria-selected="false" aria-controls="tour-panel" tabindex="-1" data-img="img/tour/pickup.jpg" data-alt="The pickup counter screen: one order to pack, with its items and pickup time.">
+            <span class="tour-n">07</span>
+            <span class="tour-text"><b>Pack and hand over</b><span>The order lands on the pickup counter's packing list.</span></span>
+            <i class="tour-bar" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="tour-stage">
+          <div class="device" id="tour-panel" role="tabpanel" aria-labelledby="tour-tab-0">
+            <img id="tour-img" src="img/tour/scan.jpg" alt="The shopper screen: a camera view reading a barcode, above a basket of three items totalling 15,700 naira." width="780" height="1600" loading="lazy" decoding="async">
+          </div>
+          <div class="tour-nav">
+            <button class="btn sm" type="button" id="tour-prev" aria-label="Previous screen"><svg class="icon flip" aria-hidden="true"><use href="img/icons.svg#chevron"/></svg></button>
+            <span class="num" id="tour-count" aria-live="polite">1 of 7</span>
+            <button class="btn sm" type="button" id="tour-next" aria-label="Next screen"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#chevron"/></svg></button>
+            <button class="btn sm" type="button" id="tour-play" aria-pressed="true">Pause</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>

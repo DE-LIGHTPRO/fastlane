@@ -24,6 +24,7 @@ function itemsHtml(order) {
 function card(order, action) {
   return `<div class="card order-card" data-order="${order.id}">
     <div class="order-head"><b>${order.id}</b><span class="chip neutral">${slotLabel(order.slot)}</span></div>
+    ${order.payment ? `<p class="small muted">Paid by ${order.payment.method === 'card' ? 'card' : 'bank transfer'}${order.payment.mode === 'demo' ? ' (demo)' : ''}</p>` : ''}
     <ul class="lines">${itemsHtml(order)}</ul>
     <button class="btn block ${action.primary ? 'primary' : ''}" type="button" data-act="${action.act}">${action.label}</button>
   </div>`;

@@ -5,25 +5,25 @@ Video length 1:53. Start each line at the time shown; each has about the gap to 
 This is FastLane: a way to skip the checkout queue.
 
 [0:04] (The problem)
-On a busy night, a few cashiers scan every item while a long queue stands waiting. FastLane moves that work into the queue.
+A few cashiers scan every item while a long queue waits.
 
 [0:09] (Scan while you wait · 1 of 6)
 While they wait, the shopper scans each item with their own phone. The total adds up as they go, and there is nothing to install.
 
 [0:21] (Scan while you wait · 2 of 6)
-One tap turns the basket into a pass. It works once, and expires after fifteen minutes.
+One tap turns the basket into a pass that works only once.
 
 [0:27] (Scan while you wait · 3 of 6)
-At the fast lane, the checker scans the pass. One scan brings up the whole basket, priced from the store's own list.
+At the fast lane, the checker scans the pass and sees the whole basket.
 
 [0:33] (Scan while you wait · 4 of 6)
-The app tells the checker which items to find, always including the most expensive one. Items with no barcode, like a bakery loaf, are added here.
+The app tells the checker which items to find. Items with no barcode are added here.
 
 [0:41] (Scan while you wait · 5 of 6)
-Payment stays exactly as it is today: cash, P O S or transfer, taken by a member of staff.
+Payment stays as it is today: cash, P O S or transfer.
 
 [0:47] (Scan while you wait · 6 of 6)
-The shopper scans the code on the checker's phone, and their pass becomes a paid receipt to show at the door.
+The shopper scans the checker's phone, and gets a paid receipt for the door.
 
 [0:54] (Safeguard)
 A pass only works once. If someone shows it again, the checker's phone refuses it.
@@ -41,7 +41,7 @@ The order appears on the pickup counter's packing list, and staff pack it before
 When the shopper arrives, one scan at the counter and the order is handed over. No queue at all.
 
 [1:40] (For the store)
-For the store, every basket is recorded, with takings by payment method and a sales file for reconciliation. A printed sign at the queue is all it takes to start.
+For the store, every basket is recorded, with takings by payment method and a sales file.
 
 [1:47]
-No app to install, no new hardware, and no change to how the store takes money. One branch, four weekends, and a shorter queue.
+No app to install, no new hardware. One branch, four weekends, and a shorter queue.

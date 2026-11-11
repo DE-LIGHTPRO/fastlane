@@ -66,7 +66,12 @@ const out = (name) => join(__dirname, '..', 'docs', 'screens', name);
     await p.getByRole('button', { name: 'Choose pickup time' }).click();
     await p.locator('#slots button').nth(1).click();
     await p.screenshot({ path: out(`order-time${tag}.png`), fullPage: true });
+    await p.getByRole('button', { name: 'Continue to payment' }).click();
+    await p.getByRole('button', { name: 'Bank transfer' }).click();
+    await p.screenshot({ path: out(`order-pay${tag}.png`), fullPage: true });
+    await p.getByRole('button', { name: 'Card', exact: true }).click();
     await p.locator('#pay').click();
+    await p.locator('#qr svg').waitFor();
     await p.screenshot({ path: out(`order-pass${tag}.png`), fullPage: true });
 
     await p.goto(BASE + '/pickup');

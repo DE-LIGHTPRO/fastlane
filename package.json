@@ -13,7 +13,9 @@
     "images": "node scripts/make-images.cjs",
     "screens": "node scripts/make-screens.cjs",
     "video": "node scripts/make-video.cjs",
-    "video:voice": "node scripts/add-voiceover.cjs"
+    "video:voice": "node scripts/add-voiceover.cjs",
+    "video:say": "node scripts/say-voiceover.cjs",
+    "tour": "node scripts/make-tour.cjs"
   },
   "devDependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",

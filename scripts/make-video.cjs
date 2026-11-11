@@ -176,7 +176,7 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStar
       'This is FastLane: a way to skip the checkout queue.');
     await wait(3600);
     await caption('The problem', 'Every item is scanned at the till.', 'A few cashiers do all the scanning while a long queue waits. FastLane moves that work into the queue.', 'both',
-      'On a busy night, a few cashiers scan every item while a long queue stands waiting. FastLane moves that work into the queue.');
+      'A few cashiers scan every item while a long queue waits.');
     await wait(5600);
 
     // ---- Scan while you wait
@@ -190,7 +190,7 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStar
     await wait(1600);
 
     await caption('Scan while you wait · 2 of 6', 'One tap turns the basket into a pass.', 'It works once and expires after 15 minutes.', 'left',
-      'One tap turns the basket into a pass. It works once, and expires after fifteen minutes.');
+      'One tap turns the basket into a pass that works only once.');
     await wait(1000);
     await left.getByRole('button', { name: 'I am at the fast lane' }).click();
     await left.locator('#qr svg').waitFor();
@@ -198,7 +198,7 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStar
     await wait(3600);
 
     await caption('Scan while you wait · 3 of 6', 'At the fast lane, the checker scans the pass.', 'One scan brings up the whole basket, priced from the store list, never from the shopper\'s phone.', 'right',
-      'At the fast lane, the checker scans the pass. One scan brings up the whole basket, priced from the store\'s own list.');
+      'At the fast lane, the checker scans the pass and sees the whole basket.');
     await wait(900);
     await right.getByRole('button', { name: 'Open camera' }).click();
     await wait(1100);
@@ -209,7 +209,7 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStar
     await wait(3400);
 
     await caption('Scan while you wait · 4 of 6', 'A guided spot check.', 'The checker finds the named items and counts the basket. Items with no barcode, like a bakery loaf, are added here.', 'right',
-      'The app tells the checker which items to find, always including the most expensive one. Items with no barcode, like a bakery loaf, are added here.');
+      'The app tells the checker which items to find. Items with no barcode are added here.');
     await wait(1200);
     await right.locator('#extras button').first().scrollIntoViewIfNeeded();
     await wait(700);
@@ -223,7 +223,7 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStar
     await wait(700);
 
     await caption('Scan while you wait · 5 of 6', 'Payment stays the way it is today.', 'Cash, POS or transfer, taken by a member of staff. Nobody has to trust a new payment app.', 'right',
-      'Payment stays exactly as it is today: cash, P O S or transfer, taken by a member of staff.');
+      'Payment stays as it is today: cash, P O S or transfer.');
     await wait(900);
     await right.getByRole('button', { name: 'Basket is correct' }).click();
     await wait(1700);
@@ -236,7 +236,7 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStar
     await wait(2600);
 
     await caption('Scan while you wait · 6 of 6', 'The shopper gets a receipt for the door.', 'They scan the code on the checker\'s phone, and their pass becomes a paid receipt.', 'left',
-      'The shopper scans the code on the checker\'s phone, and their pass becomes a paid receipt to show at the door.');
+      'The shopper scans the checker\'s phone, and gets a paid receipt for the door.');
     await wait(900);
     await left.getByRole('button', { name: /I have paid/ }).click();
     await wait(1200);
@@ -298,8 +298,12 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStar
     await wait(1500);
     await left.locator('#slots button').first().click();
     await wait(1000);
-    await left.locator('#pay').scrollIntoViewIfNeeded();
+    await left.getByRole('button', { name: 'Continue to payment' }).scrollIntoViewIfNeeded();
     await wait(600);
+    await left.getByRole('button', { name: 'Continue to payment' }).click();
+    await wait(1400);
+    await left.getByRole('button', { name: 'Card', exact: true }).click();
+    await wait(1000);
     await left.locator('#pay').click();
     await left.locator('#qr svg').waitFor();
     sound('paid');
@@ -339,13 +343,13 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStar
     await right.locator('#local-note').evaluate((el) => { el.hidden = true; });
     await right.locator('.poster').evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await caption('For the store', 'Every basket is recorded.', 'Takings by payment method and a sales file for reconciliation. A printed sign at the queue starts it all.', 'both',
-      'For the store, every basket is recorded, with takings by payment method and a sales file for reconciliation. A printed sign at the queue is all it takes to start.',
+      'For the store, every basket is recorded, with takings by payment method and a sales file.',
       ['Checker\'s phone', 'Queue sign']);
     await wait(6200);
 
     // ---- Close
     await caption('', 'One branch. Four weekends. A shorter queue.', 'No app to install. No new hardware. Payment stays the way the store takes it today.', 'both',
-      'No app to install, no new hardware, and no change to how the store takes money. One branch, four weekends, and a shorter queue.');
+      'No app to install, no new hardware. One branch, four weekends, and a shorter queue.');
     await wait(6000);
 
     const video = page.video();

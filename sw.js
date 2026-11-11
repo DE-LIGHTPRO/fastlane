@@ -1,11 +1,11 @@
 // Offline support. Store networks are patchy, so once a page has loaded it must keep working.
 // Strategy: always try the network first (so updates show at once), fall back to the cache.
-const CACHE = 'fastlane-v10';
+const CACHE = 'fastlane-v12';
 const SHELL = [
   './', 'scan', 'order', 'checker', 'assist', 'pickup', 'products', 'poster', 'proposal', 'privacy', 'queue-timer',
   'css/app.css', 'data/products.json', 'img/icons.svg', 'img/favicon.svg', 'manifest.webmanifest',
   'js/assist.js', 'js/basket.js', 'js/camera-panel.js', 'js/catalogue.js', 'js/checker.js', 'js/config.js', 'js/ean13.js', 'js/landing.js',
-  'js/order.js', 'js/orders.js', 'js/proposal.js', 'js/queue.js', 'js/queue-stats.js', 'js/sales.js',
+  'js/order.js', 'js/orders.js', 'js/payments.js', 'js/proposal.js', 'js/queue.js', 'js/queue-stats.js', 'js/sales.js',
   'js/pickup.js', 'js/poster.js', 'js/products.js', 'js/scanner.js', 'js/shopper.js', 'js/ui.js',
   'vendor/barcode-detector.js', 'vendor/qrcode.js', 'vendor/zxing_reader.wasm',
   'vendor/fonts/inter-latin-wght-normal.woff2', 'vendor/fonts/bricolage-latin-wght-normal.woff2', 'img/qr-demo.svg', 'vendor/fonts/inter-latin-ext-wght-normal.woff2',

@@ -41,7 +41,7 @@
 
 <main class="app">
   <ol class="progress" aria-label="Steps">
-    <li>Choose</li><li>Pickup time</li><li>Collect</li>
+    <li>Choose</li><li>Pickup time</li><li>Pay</li><li>Collect</li>
   </ol>
 
   <section data-view="browse">
@@ -63,9 +63,46 @@
       <ul class="lines" id="summary"></ul>
       <div class="kv total"><span>Total</span><b id="t-total"></b></div>
     </div>
-    <div class="note warn"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg><span>Demo payment. No money is taken. In a live store this step pays the store by card or transfer.</span></div>
-    <button class="btn primary block" id="pay" type="button" disabled>Pay</button>
+    <button class="btn primary block" id="to-pay" type="button" disabled>Continue to payment</button>
     <button class="btn block" id="back" type="button">Change my order</button>
+  </section>
+
+  <section data-view="pay" hidden>
+    <div class="page-head"><h1>Pay for your order</h1></div>
+    <div class="card hero-total">
+      <div class="muted small">To pay</div>
+      <div class="big" id="pay-total"></div>
+      <div class="muted small" id="pay-slot"></div>
+    </div>
+    <div>
+      <div class="label" id="pm-label">How would you like to pay?</div>
+      <div class="pay two" id="pm" role="group" aria-labelledby="pm-label">
+        <button class="btn" type="button" data-method="card" aria-pressed="false"><svg class="icon lg" aria-hidden="true"><use href="img/icons.svg#card"/></svg>Card</button>
+        <button class="btn" type="button" data-method="transfer" aria-pressed="false"><svg class="icon lg" aria-hidden="true"><use href="img/icons.svg#transfer"/></svg>Bank transfer</button>
+      </div>
+    </div>
+    <div class="field" id="email-field" hidden>
+      <label for="email">Email for your receipt</label>
+      <input type="email" id="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
+    </div>
+    <div class="card" id="transfer-box" hidden>
+      <div class="kv"><span>Bank</span><b>Demo Bank</b></div>
+      <div class="kv"><span>Account number</span><b class="mono">0000 000 000</b></div>
+      <div class="kv"><span>Account name</span><b>FastLane demo</b></div>
+      <div class="kv total"><span>Send exactly</span><b id="transfer-amount"></b></div>
+    </div>
+    <div class="note warn" id="demo-note"><svg class="icon" aria-hidden="true"><use href="img/icons.svg#info"/></svg><span>Demo mode. No money is taken and this is not a real account, so do not send anything. A live store connects a payment provider here.</span></div>
+    <div class="note plain" id="live-note" hidden><svg class="icon" aria-hidden="true"><use href="img/icons.svg#shield"/></svg><span>Payment is handled by Paystack. FastLane never sees your card details.</span></div>
+    <button class="btn primary block" id="pay" type="button" disabled>Pay</button>
+    <button class="btn block" id="pay-back" type="button">Back</button>
+  </section>
+
+  <section data-view="paying" hidden>
+    <div class="result">
+      <div class="spinner" aria-hidden="true"></div>
+      <h1>Confirming your payment</h1>
+      <p id="paying-text">This takes a moment. Keep this page open.</p>
+    </div>
   </section>
 
   <section data-view="code" hidden>
@@ -79,6 +116,7 @@
       <div class="pass-cut"></div>
       <div class="pass-body">
         <div class="kv"><span>Order</span><b class="pass-id" id="c-id"></b></div>
+        <div class="kv"><span>Paid by</span><b id="c-method"></b></div>
         <div class="kv total"><span>Paid</span><b id="c-total"></b></div>
       </div>
     </div>

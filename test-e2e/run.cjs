@@ -120,6 +120,46 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       await page.close();
     });
 
+    await step('the slide tour shows real screens, moves by button and keyboard, and plays by itself', async () => {
+      const page = await plain.newPage({ viewport: { width: 1440, height: 900 } });
+      watch(page, errors);
+      await page.goto(BASE + '/');
+      const img = page.locator('#tour-img');
+      await img.scrollIntoViewIfNeeded();
+      const tabs = page.locator('.tour-tab');
+      assert.equal(await tabs.count(), 7);
+      for (const src of await tabs.evaluateAll((els) => els.map((el) => el.dataset.img))) {
+        assert.equal((await page.request.get(`${BASE}/${src}`)).status(), 200, src);
+      }
+      // It advances by itself while in view.
+      await page.mouse.move(5, 5);
+      await page.waitForFunction(() => document.querySelector('#tour-count').textContent === '2 of 7', null, { timeout: 12000 });
+      // Any manual move stops the autoplay and shows that screen.
+      await page.getByRole('button', { name: 'Next screen' }).click();
+      assert.equal(await page.locator('#tour-count').textContent(), '3 of 7');
+      assert.equal(await page.locator('#tour-play').textContent(), 'Play');
+      await page.waitForFunction(() => document.querySelector('#tour-img').getAttribute('src').endsWith('check.jpg') && !document.querySelector('#tour-img').classList.contains('swap'));
+      assert.ok(await img.evaluate((el) => el.complete && el.naturalWidth === 780));
+      assert.match(await img.getAttribute('alt'), /checker screen/);
+      await page.getByRole('tab', { name: /Take payment/ }).click();
+      assert.equal(await page.locator('#tour-count').textContent(), '4 of 7');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('.tour-tab[aria-selected="true"] b').textContent(), 'Receipt for the door');
+      await page.getByRole('button', { name: 'Previous screen' }).click();
+      await page.getByRole('button', { name: 'Previous screen' }).click();
+      assert.equal(await page.locator('#tour-count').textContent(), '3 of 7');
+      await page.close();
+
+      // With reduced motion switched on, nothing moves or hides.
+      const calm = await plain.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+      const still = await calm.newPage();
+      await still.goto(BASE + '/');
+      assert.equal(await still.locator('#tour-play').textContent(), 'Play');
+      assert.equal(await still.locator('#hero-total').textContent(), naira(1570000));
+      assert.ok(!(await still.evaluate(() => document.documentElement.classList.contains('js-motion'))));
+      await calm.close();
+    });
+
     await step('an unknown address shows the not-found page', async () => {
       const page = await plain.newPage();
       watch(page, []); // a 404 logs a console error by design
@@ -464,11 +504,28 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       const firstSlot = await order.locator('#slots button').first().textContent();
       assert.match(firstSlot, /^7:00/);
       assert.match(firstSlot, /Today/);
-      const pay = order.locator('#pay');
-      assert.ok(await pay.isDisabled());
-      assert.equal(await pay.textContent(), 'Pay ' + naira(orderTotal));
+      const toPay = order.getByRole('button', { name: 'Continue to payment' });
+      assert.ok(await toPay.isDisabled());
       await order.locator('#slots button').first().click();
+      await toPay.click();
+    });
+
+    await step('payment needs a method; bank transfer shows where to send, and the demo says no money moves', async () => {
+      await order.getByRole('heading', { name: 'Pay for your order' }).waitFor();
+      const pay = order.locator('#pay');
+      assert.equal(await order.locator('#pay-total').textContent(), naira(orderTotal));
+      assert.ok(await pay.isDisabled());
+      assert.ok(await order.locator('#demo-note').isVisible());
+      assert.ok(await order.locator('#email-field').isHidden(), 'no email asked for in demo mode');
+      await order.getByRole('button', { name: 'Bank transfer' }).click();
+      assert.ok(await order.locator('#transfer-box').isVisible());
+      assert.equal(await order.locator('#transfer-amount').textContent(), naira(orderTotal));
+      assert.equal(await pay.textContent(), 'I have sent ' + naira(orderTotal));
+      await order.getByRole('button', { name: 'Card', exact: true }).click();
+      assert.ok(await order.locator('#transfer-box').isHidden());
+      assert.equal(await pay.textContent(), 'Pay ' + naira(orderTotal));
       await pay.click();
+      await order.getByRole('heading', { name: 'Confirming your payment' }).waitFor();
     });
 
     await step('a confirmed order shows a pickup pass that decodes to the order', async () => {
@@ -477,6 +534,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       assert.match(orderId, /^[A-Z2-9]{6}$/);
       assert.equal(await order.locator('#c-total').textContent(), naira(orderTotal));
       assert.match(await order.locator('#c-slot').textContent(), /^Today, 7:00/);
+      assert.equal(await order.locator('#c-method').textContent(), 'Card');
       const png = await order.locator('#qr svg').screenshot();
       orderText = (await scanPng(order, png, 'QR_FORMATS'))[0];
       const slot = saturdayEvening.getTime() + 50 * 60 * 1000;
@@ -498,6 +556,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       const card = counter.locator(`#to-pack [data-order="${orderId}"]`);
       await card.waitFor();
       assert.match(await card.textContent(), /2 ×\s+Sliced bread/);
+      assert.match(await card.textContent(), /Paid by card \(demo\)/);
       assert.equal(await counter.locator('#n-pack').textContent(), '1');
       await card.getByRole('button', { name: 'Mark as packed' }).click();
       await counter.locator(`#ready [data-order="${orderId}"]`).waitFor();
@@ -766,7 +825,8 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
       };
       for (const colorScheme of ['light', 'dark']) {
         for (const target of [...PAGES, ...UNLISTED, ...Object.keys(seeded)]) {
-          const ctx = await plain.newContext({ viewport: phone, colorScheme, bypassCSP: true });
+          // Reduced motion keeps every block visible, so the whole page is checked, not just the first screen.
+          const ctx = await plain.newContext({ viewport: phone, colorScheme, bypassCSP: true, reducedMotion: 'reduce' });
           const [name] = target.split('#');
           if (seeded[target]) {
             await ctx.addInitScript((data) => { for (const [k, v] of Object.entries(data)) localStorage.setItem(k, JSON.stringify(v)); }, seeded[target]);

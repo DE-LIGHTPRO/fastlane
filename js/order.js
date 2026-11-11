@@ -2,6 +2,7 @@ import qrcode from '../vendor/qrcode.js';
 import { encodeOrder, priceBasket, newBasketId, pickupSlots, formatNaira, MAX_PICKUP_QTY } from './basket.js';
 import { loadCatalogue } from './catalogue.js';
 import { saveOrder, findOrder, slotLabel, slotParts } from './orders.js';
+import { liveMode, takePayment } from './payments.js';
 import { $, escapeHtml, icon, show, setProgress, toast, plural, qrSvg, keepAwake } from './ui.js';
 
 const DRAFT = 'fastlane.order.draft';
@@ -12,6 +13,7 @@ let catalogue = new Map();
 let offered = [];
 let items = loadDraft();
 let slot = 0;
+let method = '';
 let releaseWake = () => {};
 
 function loadDraft() {
@@ -68,8 +70,7 @@ function showTime() {
   }).join('');
   $('#summary').innerHTML = linesHtml(lines);
   $('#t-total').textContent = formatNaira(total);
-  $('#pay').textContent = 'Pay ' + formatNaira(total);
-  $('#pay').disabled = true;
+  $('#to-pay').disabled = true;
   $('#bar').hidden = true;
   setProgress(1);
   show('time');
@@ -86,7 +87,8 @@ async function showCode(order) {
   $('#c-total').textContent = formatNaira(order.total);
   $('#c-lines').innerHTML = linesHtml(lines);
   $('#bar').hidden = true;
-  setProgress(2);
+  $('#c-method').textContent = order.payment ? (order.payment.method === 'card' ? 'Card' : 'Bank transfer') : 'Demo';
+  setProgress(4);
   show('code');
   releaseWake();
   releaseWake = await keepAwake();
@@ -114,12 +116,64 @@ $('#slots').addEventListener('click', (e) => {
   if (!btn) return;
   slot = Number(btn.dataset.slot);
   for (const b of document.querySelectorAll('#slots .btn')) b.setAttribute('aria-pressed', String(b === btn));
+  $('#to-pay').disabled = false;
+});
+
+// ---- Payment ---------------------------------------------------------------
+function showPay() {
+  const { total } = priceBasket(items, catalogue);
+  method = '';
+  $('#pay-total').textContent = formatNaira(total);
+  $('#pay-slot').textContent = 'Pickup ' + slotLabel(slot);
+  $('#transfer-amount').textContent = formatNaira(total);
+  for (const b of document.querySelectorAll('#pm .btn')) b.setAttribute('aria-pressed', 'false');
+  $('#transfer-box').hidden = true;
+  $('#email-field').hidden = !liveMode;
+  $('#demo-note').hidden = liveMode;
+  $('#live-note').hidden = !liveMode;
+  $('#pay').textContent = 'Pay ' + formatNaira(total);
+  $('#pay').disabled = true;
+  setProgress(2);
+  show('pay');
+}
+
+$('#to-pay').addEventListener('click', showPay);
+$('#pay-back').addEventListener('click', showTime);
+$('#pm').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-method]');
+  if (!btn) return;
+  method = btn.dataset.method;
+  for (const b of document.querySelectorAll('#pm .btn')) b.setAttribute('aria-pressed', String(b === btn));
+  // In demo mode the transfer option shows where the money would go. With a payment
+  // provider connected, the provider shows its own account details instead.
+  $('#transfer-box').hidden = liveMode || method !== 'transfer';
+  const { total } = priceBasket(items, catalogue);
+  $('#pay').textContent = !liveMode && method === 'transfer' ? 'I have sent ' + formatNaira(total) : 'Pay ' + formatNaira(total);
   $('#pay').disabled = false;
 });
 
-$('#pay').addEventListener('click', () => {
+$('#pay').addEventListener('click', async () => {
   const { total, units } = priceBasket(items, catalogue);
-  const order = { id: newBasketId(randomBytes), ts: Date.now(), slot, items, total, units, status: 'paid' };
+  const email = $('#email').value.trim();
+  if (liveMode && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    $('#email').focus();
+    return toast('Enter your email address for the receipt.', 'warn');
+  }
+  const id = newBasketId(randomBytes);
+  $('#paying-text').textContent = method === 'transfer' ? 'Waiting for your transfer to arrive. Keep this page open.' : 'This takes a moment. Keep this page open.';
+  show('paying');
+  let payment;
+  try {
+    payment = await takePayment({ amount: total, email, reference: `FL-${id}-${Date.now()}`, method });
+  } catch (err) {
+    showPay();
+    return toast(err.message, 'warn');
+  }
+  if (!payment) { // the shopper closed the payment window
+    showPay();
+    return toast('Payment was cancelled. Nothing was charged.', 'warn');
+  }
+  const order = { id, ts: Date.now(), slot, items, total, units, status: 'paid', payment };
   saveOrder(order);
   localStorage.setItem(LAST, order.id);
   items = [];

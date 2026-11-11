@@ -223,7 +223,7 @@ p { margin: 0; }
 
 label, .label { display: block; font-size: 14px; font-weight: 620; margin: 0 0 6px; }
 .field + .field { margin-top: 14px; }
-input[type="text"], input[type="search"], input[type="number"], textarea {
+input[type="text"], input[type="search"], input[type="number"], input[type="email"], textarea {
   width: 100%; font: inherit; padding: 12px 14px; min-height: 50px;
   border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
   background: var(--surface); color: var(--ink);
@@ -725,3 +725,72 @@ dialog.dialog p { margin-top: 8px; color: var(--muted); }
 main section[tabindex="-1"]:focus { outline: none; }
 /* Headings take focus when the screen changes so screen readers announce it; no ring is drawn for that. */
 [data-view] h1:focus { outline: none; }
+
+/* ---- Payment ----------------------------------------------------------- */
+.pay.two { grid-template-columns: 1fr 1fr; }
+.spinner { width: 64px; height: 64px; border-radius: 50%; border: 6px solid var(--accent-soft); border-top-color: var(--accent); margin: 0 auto 22px; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
+/* ======================================================================
+   Landing page: motion and the slide tour
+   ====================================================================== */
+.icon.flip { transform: scaleX(-1); }
+
+/* Scroll reveal. Only active when landing.js has added .js-motion, so the page is complete without it. */
+.js-motion .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms); }
+.js-motion .reveal.in { opacity: 1; transform: none; }
+
+/* Hero entrance: copy rises in, then the phone plays the product in miniature. */
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.86) translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes sweep-mini { 0%, 100% { top: 26%; } 50% { top: 74%; } }
+.js-motion .hero-copy > * { animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.js-motion .hero-copy > :nth-child(2) { animation-delay: 0.08s; }
+.js-motion .hero-copy > :nth-child(3) { animation-delay: 0.16s; }
+.js-motion .hero-copy > :nth-child(4) { animation-delay: 0.24s; }
+.js-motion .hero-copy > :nth-child(5) { animation-delay: 0.32s; }
+.js-motion .hero-art .phone { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both; }
+.js-motion .phone .p-cam i { animation: sweep-mini 2.2s ease-in-out infinite; }
+.js-motion .phone .p-list div { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.js-motion .phone .p-list div:nth-child(1) { animation-delay: 0.9s; }
+.js-motion .phone .p-list div:nth-child(2) { animation-delay: 1.9s; }
+.js-motion .phone .p-list div:nth-child(3) { animation-delay: 2.9s; }
+.js-motion .float-pass { animation: pop 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 3.7s both, bob 6s ease-in-out 4.2s infinite; }
+.js-motion .float-paid { animation: pop 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 4.5s both, bob 6s ease-in-out 5s infinite; }
+.btn.lg { transition: transform 0.15s, background-color 0.12s, border-color 0.12s, box-shadow 0.15s; }
+.js-motion .btn.lg:hover { transform: translateY(-2px); }
+.js-motion .feature .btn .icon, .js-motion .cta .btn .icon { transition: transform 0.2s; }
+.js-motion .feature .btn:hover .icon, .js-motion .cta .btn:hover .icon { transform: translateX(4px); }
+
+/* Slide tour: a framed phone beside a list of screens. */
+.tour { display: grid; gap: 28px; align-items: center; }
+.tour-tabs { display: grid; gap: 8px; }
+.tour-tab {
+  position: relative; display: none; gap: 16px; align-items: flex-start; text-align: left; width: 100%;
+  padding: 16px 18px; border: 1px solid transparent; border-radius: 16px; background: transparent; color: var(--ink);
+  font: inherit; cursor: pointer; overflow: hidden;
+}
+.tour-tab[aria-selected="true"] { display: flex; background: var(--surface); border-color: var(--line); box-shadow: var(--shadow-sm); }
+.tour-n { font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; color: var(--muted); padding-top: 2px; }
+.tour-tab[aria-selected="true"] .tour-n { color: var(--accent-text); }
+.tour-text b { display: block; font-family: var(--display); font-size: 19px; letter-spacing: -0.02em; }
+.tour-text span { display: block; margin-top: 3px; font-size: 15px; color: var(--muted); }
+.tour-bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: var(--brand-2); }
+@keyframes fill { from { width: 0; } to { width: 100%; } }
+.tour.playing .tour-tab[aria-selected="true"] .tour-bar { animation: fill 5s linear forwards; }
+.tour-stage { display: grid; justify-items: center; gap: 18px; order: -1; }
+.device { width: min(100%, 320px); border: 10px solid var(--deep); border-radius: 44px; overflow: hidden; background: var(--deep); box-shadow: var(--shadow-lg); }
+.device img { width: 100%; height: auto; display: block; transition: opacity 0.28s; }
+.device img.swap { opacity: 0; }
+.tour-nav { display: flex; align-items: center; gap: 10px; }
+.tour-nav .btn { min-width: 44px; padding-left: 12px; padding-right: 12px; }
+.tour-nav #tour-count { min-width: 4.5em; text-align: center; font-size: 14px; color: var(--muted); }
+@media (min-width: 900px) {
+  .tour { grid-template-columns: minmax(0, 520px) 360px; justify-content: space-between; gap: 72px; }
+  .tour-tab { display: flex; padding: 14px 18px; }
+  /* Only the open screen shows its description, so all seven fit beside the phone. */
+  .tour-tab:not([aria-selected="true"]) .tour-text span { display: none; }
+  .tour-tab:hover { background: var(--surface); }
+  .tour-stage { order: 2; }
+}
